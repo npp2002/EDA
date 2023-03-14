@@ -34,6 +34,30 @@ In the meeting, the Interpreter should effectively provide an overview of what t
 
 The Deliverer is responsible for compiling all the information into the RMarkdown template provided on the course website. This document should be carefully proofread and submitted as an HTML file via Canvas by the due date. A minimum 2 point penalty will be given, if this document is submitted late. This penalty applies to your entire group. The tables and figures for the initial questions should be generated using R code chunks. The R code and output should be displayed in the HTML file. The 2 paragraph summary should be written in complete sentences and free of grammatical/spelling errors.
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)    #Essential Functions
+library(knitr)        #kable() for HTML Tables
+library(kableExtra)   #HTML Table Styling
+```
+
+#DATA READING AND CLEANING
+
+```{r}
+
+steam_games <- read.csv("steam.csv")
+tag_data <- read.csv("steamspy_tag_data.csv")
+
+steam_games
+
+steam_games_removed = steam_games[,!names(steam_games) %in% c("developer", "publisher", "platforms","categories")] %>%
+  filter(english==1)
+
+steam_games_removed
+
+```
+
 # **Rubric**
 
 |Requirement|Points|
