@@ -51,12 +51,13 @@ tag_data <- read.csv("steamspy_tag_data.csv") #let's keep the app_id in case we 
 
 steam_games
 
-steam_games_removed = steam_games[,!names(steam_games) %in% c("developer", "publisher", "platforms")] %>%
+steam_games_final = steam_games[,!names(steam_games) %in% c("developer", "publisher", "platforms")] %>%
+  rename(age=required_age) %>%
   filter(english==1)
 
 
 
-steam_games_removed
+steam_games_final
 
 ```
 
@@ -94,6 +95,15 @@ steam_games_removed
 # **QUESTION 6: Is there a correlation between required age to play the game and the number of achievements?**
 
 ```{r}
+
+steam_games_final
+
+co6 = steam_games_final %>%
+  group_by(age) %>%
+  summarise(average_achievements = mean(achievements))
+
+co6
+
 
 ```
 
