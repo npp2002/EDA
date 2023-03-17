@@ -58,74 +58,74 @@ steam_games_removed
 
 ```
 
-# **QUESTION 1**
+# **QUESTION 1: Are some genres more expensive than others?**
 
 ```{r}
 
 ```
 
-# **QUESTION 2**
+# **QUESTION 2: What is the relationship between the price of the product and the median playtime?**
 
 ```{r}
 
 ```
 
 
-# **QUESTION 3**
+# **QUESTION 3: Which developer has the most negative ratings?**
 
 ```{r}
 
 ```
 
-# **QUESTION 4**
+# **QUESTION 4: How does the number of in-game achievements correlate with the median playtime?**
 
 ```{r}
 
 ```
 
-# **QUESTION 5**
+# **QUESTION 5: Is there a correlation between the latest update and the number of negative ratings for a game?**
 
 ```{r}
 
 ```
 
-# **QUESTION 6**
+# **QUESTION 6: Is there a correlation between required age to play the game and the number of achievements?**
 
 ```{r}
 
 ```
 
-# **QUESTION 7**
+# **QUESTION 7: Are positive ratings higher for games that have longer average playtimes?**
 
 ```{r}
 
 ```
 
-# **QUESTION 8**
+# **QUESTION 8: Are negative ratings higher for games that have a higher price?**
 
 ```{r}
 
 ```
 
-# **QUESTION 9**
+# **QUESTION 9: Is there a relationship between the release date of a game and its age requirements?**
 
 ```{r}
 
 ```
 
-# **QUESTION 10**
+# **QUESTION 10: Is there a correlation between the platform that the game is played on and number of owners?**
 
 ```{r}
 
 ```
 
-# **QUESTION 11**
+# **QUESTION 11: Is there a relationship between the amount of in game achievements and positive ratings?**
 
 ```{r}
 
 ```
 
-# **QUESTION 12**
+# **QUESTION 12: Are games with more positive ratings priced higher than those with negative ratings?**
 
 ```{r}
 
