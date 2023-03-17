@@ -47,12 +47,14 @@ library(kableExtra)   #HTML Table Styling
 ```{r}
 
 steam_games <- read.csv("steam.csv")
-tag_data <- read.csv("steamspy_tag_data.csv")
+tag_data <- read.csv("steamspy_tag_data.csv") #let's keep the app_id in case we want to join with tag data. Tag data has a bunch of genre indicators that could give us a glimpse into how voters perceive each video game. There are a TON of indicator variables so I don't know if we have the time or capacity to work with it entirely but it looks really really cool.
 
 steam_games
 
-steam_games_removed = steam_games[,!names(steam_games) %in% c("developer", "publisher", "platforms","categories")] %>%
+steam_games_removed = steam_games[,!names(steam_games) %in% c("developer", "publisher", "platforms")] %>%
   filter(english==1)
+
+
 
 steam_games_removed
 
