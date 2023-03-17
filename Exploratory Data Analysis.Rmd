@@ -113,7 +113,7 @@ co6
 
 ```
 
-# **QUESTION 8: Are negative ratings higher for games that have a higher price?**
+# **QUESTION 8: Is there a correlation between the number of owners and the price?**
 
 ```{r}
 
