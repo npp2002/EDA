@@ -58,6 +58,80 @@ steam_games_removed
 
 ```
 
+# **QUESTION 1**
+
+```{r}
+
+```
+
+# **QUESTION 2**
+
+```{r}
+
+```
+
+
+# **QUESTION 3**
+
+```{r}
+
+```
+
+# **QUESTION 4**
+
+```{r}
+
+```
+
+# **QUESTION 5**
+
+```{r}
+
+```
+
+# **QUESTION 6**
+
+```{r}
+
+```
+
+# **QUESTION 7**
+
+```{r}
+
+```
+
+# **QUESTION 8**
+
+```{r}
+
+```
+
+# **QUESTION 9**
+
+```{r}
+
+```
+
+# **QUESTION 10**
+
+```{r}
+
+```
+
+# **QUESTION 11**
+
+```{r}
+
+```
+
+# **QUESTION 12**
+
+```{r}
+
+```
+
+
 # **Rubric**
 
 |Requirement|Points|
