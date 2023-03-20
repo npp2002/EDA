@@ -77,7 +77,13 @@ steam_games_final
 # **QUESTION 3: Which developer has the most negative ratings?**
 
 ```{r}
+steam_games_negative <- steam_games %>% 
+  select("developer", "negative_ratings") %>%
+  group_by(developer) %>% 
+  summarise_each(funs(sum)) %>%
+  arrange(desc(negative_ratings))
 
+head(steam_games_negative, 5)
 ```
 
 # **QUESTION 4: How does the number of in-game achievements correlate with the median playtime?**
@@ -86,13 +92,13 @@ steam_games_final
 
 ```
 
-# **QUESTION 5: Is there a correlation between the latest update and the number of negative ratings for a game?**
+# **QUESTION 5: Is there a relationship between the latest update and the number of negative ratings for a game?**
 
 ```{r}
 
 ```
 
-# **QUESTION 6: Is there a correlation between required age to play the game and the number of achievements?**
+# **QUESTION 6: Is there a relationship between required age to play the game and the number of achievements?**
 
 ```{r}
 
@@ -102,7 +108,9 @@ co6 = steam_games_final %>%
   group_by(age) %>%
   summarise(average_achievements = mean(achievements))
 
-co6
+co6[order(co6$average_achievements),]
+
+
 
 
 ```
