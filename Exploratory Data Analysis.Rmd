@@ -51,7 +51,7 @@ tag_data <- read.csv("steamspy_tag_data.csv") #let's keep the app_id in case we 
 
 steam_games
 
-steam_games_final = steam_games[,!names(steam_games) %in% c("developer", "publisher", "platforms")] %>%
+steam_games_final = steam_games[,!names(steam_games) %in% c( "publisher")] %>%
   rename(age=required_age) %>%
   filter(english==1)
 
@@ -77,7 +77,7 @@ steam_games_final
 # **QUESTION 3: Which developer has the most negative ratings?**
 
 ```{r}
-steam_games_negative <- steam_games %>% 
+steam_games_negative <- steam_games_final %>% 
   select("developer", "negative_ratings") %>%
   group_by(developer) %>% 
   summarise_each(funs(sum)) %>%
@@ -89,7 +89,12 @@ head(steam_games_negative, 5)
 # **QUESTION 4: How does the number of in-game achievements correlate with the median playtime?**
 
 ```{r}
+achievements <- steam_games_final %>%
+  select(categories, achievements, average_playtime) %>%
+  group_by(categories) %>% summarise_each(funs(sum)) %>%
+  arrange(desc(achievements))
 
+achievements 
 ```
 
 # **QUESTION 5: Is there a relationship between the latest update and the number of negative ratings for a game?**
