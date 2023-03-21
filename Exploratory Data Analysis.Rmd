@@ -101,6 +101,20 @@ achievements
 
 ```{r}
 
+co5 = steam_games_final %>%
+  select(release_date,negative_ratings) %>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_date=substr(release_date,1,4))
+  
+
+co5_graph = co5 %>%
+  ggplot(aes(x=release_date,y=negative_ratings)) +
+  geom_bar(stat="identity",fill="pink") +
+  xlab("Release Year") + ylab("Number of Negative Ratings") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+co5_graph
 
 
 
