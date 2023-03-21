@@ -40,6 +40,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)    #Essential Functions
 library(knitr)        #kable() for HTML Tables
 library(kableExtra)   #HTML Table Styling
+library(stringr)
 ```
 
 #DATA READING AND CLEANING
@@ -53,6 +54,7 @@ steam_games
 
 steam_games_final = steam_games[,!names(steam_games) %in% c( "publisher")] %>%
   rename(age=required_age) %>%
+  mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
   filter(english==1)
 
 
@@ -89,6 +91,8 @@ head(steam_games_negative, 5)
 # **QUESTION 4: How does the number of in-game achievements correlate with the median playtime?**
 
 ```{r}
+#FOLLOW-UP?
+
 achievements <- steam_games_final %>%
   select(categories, achievements, average_playtime) %>%
   group_by(categories) %>% summarise_each(funs(sum)) %>%
@@ -100,6 +104,8 @@ achievements
 # **QUESTION 5: Is there a relationship between the release date and the number of negative ratings for a game?**
 
 ```{r}
+
+#FOLLOW-UP
 
 co5 = steam_games_final %>%
   select(release_date,negative_ratings) %>%
@@ -124,6 +130,8 @@ co5_graph
 
 #also-should we separate release year and month, and look to analyze that?
 
+#x and y - color code with genre
+
 ```
 
 # **QUESTION 6: Is there a relationship between required age to play the game and the number of achievements?**
@@ -141,14 +149,10 @@ co6
 #co6[order(co6$average_achievements),]
 
 
-ggplot(co6,aes(x=age,y=average_achievements)) +
+ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
   geom_bar(stat='identity',fill="pink") +
   xlab("Age Required to Play") + ylab("Average Achievements") +
   theme_minimal()
-
-
-
-
 
 ```
 
@@ -156,12 +160,13 @@ ggplot(co6,aes(x=age,y=average_achievements)) +
 
 ```{r}
 
+#FOLLOW-UP
 
 playtimev.ratings= steam_games_final %>% 
   select(positive_ratings, average_playtime)
 ggplot(steam_games_final,aes(x=average_playtime,y=positive_ratings))+geom_smooth()
 
-
+#correlation follow-up question?
 
 ```
 
@@ -180,51 +185,56 @@ ggplot(steam_games_final,aes(x=owners, y=price))+geom_point()+theme(axis.text.x 
 steam_games_final
 
 steam_games_1 = steam_games_final %>%
-  group_by(release_date) %>%
+  select(release_date,age) %>%
+  mutate(release_year=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_year,1,4)) %>%
+  group_by(release_year) %>%
   summarize(mean_age=mean(age)) 
+
 steam_games_1
+
+ggplot(steam_games_1, aes(x=as.numeric(release_year),y=mean_age)) + 
+  geom_point() + geom_smooth(method=lm,se=FALSE) + xlab("Release Year") + ylab("Average Required Age to Play") 
+
+
 # Note: many with 0 are unrated or unsupplied.
-```
-```{r}
-steam_games_2 = steam_games_final %>%
-  group_by(release_date) %>%
-  summarize(mean_age=mean(age)) %>%
-  arrange(desc(mean_age))
-steam_games_2
-```
-```{r}
-steam_games_3 = steam_games_final %>%
-  group_by(release_date) %>%
-  summarize(release_date, age) %>%
-  arrange(desc(release_date))
-steam_games_3
-```
-```{r}
-ggplot(data=steam_games_final, aes(x=release_date, y=age))+
-  geom_point()+
-  labs(x="Release Date", y="Required Age")
-
+# group_by month and year
 ```
 
-# **QUESTION 10: Is there a correlation between the platform that the game is played on and number of owners?**
+
+# **QUESTION 10: Is there a relationship between the number of platforms that the game can be played on and number of owners?**
 
 ```{r}
 steam_games_final
 
-steam_games_4 = steam_games_final %>%
-  group_by(platforms) %>%
-  summarize(platforms, owners)
-steam_games_4
-```
-```{r}
-steam_games_5 <- steam_games_final %>% 
-  mutate(platform = str_split(platforms, ";")) %>% 
-  unnest(platform)
+owner_test = c("100-200", "200-400")
+test1 <- find_mids(owner_test)
+head(test1)
 
-ggplot(steam_games_5, aes(x=platform, y=owners)) +
-  geom_point() +
-  labs(x="Platform Type", y="Number of Owners")
+find_mids <- function(owners) {
+  rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
+  return(rowMid / 1000)
+}
+
+test <- sapply(steam_games_final$owners, find_mids)
+head(test)
+
+steam_games_4 = steam_games_final %>%
+  mutate(mid_owner=find_mids(owners)) %>%
+  group_by(num_platforms) %>%
+  summarize(mean_mid_owner = mean(mid_owner))
+steam_games_4
+
+
+#steam_games_5 <- steam_games_final %>% 
+ # mutate(platform = str_split(platforms, ";")) %>% 
+  #unnest(platform)
+
+#ggplot(steam_games_5, aes(x=platforms, y=owners)) +
+ # geom_point() +
+  #labs(x="Platform Type", y="Number of Owners")
 ```
+
 
 # **QUESTION 11: Is there a relationship between the amount of in game achievements and positive ratings?**
 
