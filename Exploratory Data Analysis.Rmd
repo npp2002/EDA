@@ -132,18 +132,10 @@ ggplot(co6,aes(x=age,y=average_achievements)) +
 
 ```{r}
 
-co7 = steam_games_final %>%
-  select(positive_ratings,average_playtime) %>%
-  filter(positive_ratings!= 0,average_playtime != 0)
 
-#'0' %in% co7$positive_ratings
-#check why i am still getting 0 value
-
-ggplot(co7,aes(x=positive_ratings,y=average_playtime)) +
-  geom_point() +  
-   xlab("Number of Positive Ratings") + ylab("Average Playtime") + xlim(0,500000)
-
-#do a linear correlation, or a further question exploring a third variable within this scatter plot
+playtimev.ratings= steam_games_final %>% 
+  select(positive_ratings, average_playtime)
+ggplot(steam_games_final,aes(x=average_playtime,y=positive_ratings))+geom_smooth()
 
 
 
@@ -152,6 +144,9 @@ ggplot(co7,aes(x=positive_ratings,y=average_playtime)) +
 # **QUESTION 8: Is there a correlation between the number of owners and the price?**
 
 ```{r}
+ownersv.price= steam_games_final %>% 
+  select(price, owners)
+ggplot(steam_games_final,aes(x=owners, y=price))+geom_point()+theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 ```
 
