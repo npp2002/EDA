@@ -118,10 +118,11 @@ co5_graph
 
 
 
-#some caveats to this rudimentary relationship-number of negative ratings could show a skewed relationship if one game is more popular than another.
+#some caveats to this rudimentary relationship-number of negative ratings could show a skewed relationship if one game is more popular, or simply has more ratings (and thus more negative ratings) than another.
 
 #can do a heat map, looking at proportion of negative ratings for a given year and a given genre
 
+#also-should we separate release year and month, and look to analyze that?
 
 ```
 
