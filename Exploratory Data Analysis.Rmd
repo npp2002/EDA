@@ -97,9 +97,17 @@ achievements <- steam_games_final %>%
 achievements 
 ```
 
-# **QUESTION 5: Is there a relationship between the latest update and the number of negative ratings for a game?**
+# **QUESTION 5: Is there a relationship between the release date and the number of negative ratings for a game?**
 
 ```{r}
+
+
+
+
+#some caveats to this rudimentary relationship-number of negative ratings could show a skewed relationship if one game is more popular than another.
+
+#can do a heat map, looking at proportion of negative ratings for a given year and a given genre
+
 
 ```
 
@@ -122,6 +130,7 @@ ggplot(co6,aes(x=age,y=average_achievements)) +
   geom_bar(stat='identity',fill="pink") +
   xlab("Age Required to Play") + ylab("Average Achievements") +
   theme_minimal()
+
 
 
 
@@ -153,13 +162,53 @@ ggplot(steam_games_final,aes(x=owners, y=price))+geom_point()+theme(axis.text.x 
 # **QUESTION 9: Is there a relationship between the release date of a game and its age requirements?**
 
 ```{r}
+steam_games_final
+
+steam_games_1 = steam_games_final %>%
+  group_by(release_date) %>%
+  summarize(mean_age=mean(age)) 
+steam_games_1
+# Note: many with 0 are unrated or unsupplied.
+```
+```{r}
+steam_games_2 = steam_games_final %>%
+  group_by(release_date) %>%
+  summarize(mean_age=mean(age)) %>%
+  arrange(desc(mean_age))
+steam_games_2
+```
+```{r}
+steam_games_3 = steam_games_final %>%
+  group_by(release_date) %>%
+  summarize(release_date, age) %>%
+  arrange(desc(release_date))
+steam_games_3
+```
+```{r}
+ggplot(data=steam_games_final, aes(x=release_date, y=age))+
+  geom_point()+
+  labs(x="Release Date", y="Required Age")
 
 ```
 
 # **QUESTION 10: Is there a correlation between the platform that the game is played on and number of owners?**
 
 ```{r}
+steam_games_final
 
+steam_games_4 = steam_games_final %>%
+  group_by(platforms) %>%
+  summarize(platforms, owners)
+steam_games_4
+```
+```{r}
+steam_games_5 <- steam_games_final %>% 
+  mutate(platform = str_split(platforms, ";")) %>% 
+  unnest(platform)
+
+ggplot(steam_games_5, aes(x=platform, y=owners)) +
+  geom_point() +
+  labs(x="Platform Type", y="Number of Owners")
 ```
 
 # **QUESTION 11: Is there a relationship between the amount of in game achievements and positive ratings?**
