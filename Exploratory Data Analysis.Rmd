@@ -113,7 +113,15 @@ co6 = steam_games_final %>%
   group_by(age) %>%
   summarise(average_achievements = mean(achievements))
 
-co6[order(co6$average_achievements),]
+co6
+
+#co6[order(co6$average_achievements),]
+
+
+ggplot(co6,aes(x=age,y=average_achievements)) +
+  geom_bar(stat='identity',fill="pink") +
+  xlab("Age Required to Play") + ylab("Average Achievements") +
+  theme_minimal()
 
 
 
@@ -123,6 +131,21 @@ co6[order(co6$average_achievements),]
 # **QUESTION 7: Are positive ratings higher for games that have longer average playtimes?**
 
 ```{r}
+
+co7 = steam_games_final %>%
+  select(positive_ratings,average_playtime) %>%
+  filter(positive_ratings!= 0,average_playtime != 0)
+
+#'0' %in% co7$positive_ratings
+#check why i am still getting 0 value
+
+ggplot(co7,aes(x=positive_ratings,y=average_playtime)) +
+  geom_point() +  
+   xlab("Number of Positive Ratings") + ylab("Average Playtime") + xlim(0,500000)
+
+#do a linear correlation, or a further question exploring a third variable within this scatter plot
+
+
 
 ```
 
