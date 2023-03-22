@@ -49,6 +49,7 @@ library(stringr)
 
 steam_games <- read.csv("steam.csv")
 tag_data <- read.csv("steamspy_tag_data.csv") #let's keep the app_id in case we want to join with tag data. Tag data has a bunch of genre indicators that could give us a glimpse into how voters perceive each video game. There are a TON of indicator variables so I don't know if we have the time or capacity to work with it entirely but it looks really really cool.
+tag_data
 
 steam_games
 
@@ -66,13 +67,24 @@ steam_games_final
 # **QUESTION 1: Are some genres more expensive than others?**
 
 ```{r}
+team_games_genre <- steam_games_final %>%
+  select("genres", "price") %>%
+    group_by(genres) %>%
+  summarise_each(funs(sum)) %>%
+    arrange(desc(price)) 
+head(steam_games_genre)
 
+#It looks like with Action;Indie having the highest average price, some genres are indeed more expensive than the others presumably because of the demand of these genres.
 ```
 
 # **QUESTION 2: What is the relationship between the price of the product and the median playtime?**
 
 ```{r}
+steam_games_price_median_playtime = steam_games_final %>% 
+  select(price, median_playtime)
+ggplot(steam_games_final,aes(x= price, y= median_playtime))+geom_point()
 
+#It looks like the median playtime mostly exists under 50000 and is high for prices that are lower than 100. So, cheaper games most likely have a greater median playtime presumably because of the affordability and accessibility.
 ```
 
 
