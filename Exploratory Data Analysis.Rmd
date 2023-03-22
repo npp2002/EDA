@@ -53,11 +53,10 @@ tag_data
 
 steam_games
 
-steam_games_final = steam_games[,!names(steam_games) %in% c( "publisher")] %>%
+steam_games_final = steam_games %>%
   rename(age=required_age) %>%
   mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
   filter(english==1)
-
 
 
 steam_games_final
