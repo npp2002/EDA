@@ -61,6 +61,9 @@ steam_games_final = steam_games %>%
 
 steam_games_final
 
+
+
+
 ```
 
 # **QUESTION 1: Are some genres more expensive than others?**
@@ -110,6 +113,8 @@ achievements <- steam_games_final %>%
   arrange(desc(achievements))
 
 achievements 
+
+#
 ```
 
 # **QUESTION 5: Is there a relationship between the release date and the number of negative ratings for a game?**
@@ -121,8 +126,9 @@ achievements
 co5 = steam_games_final %>%
   select(release_date,negative_ratings) %>%
   mutate(release_date=str_replace_all(release_date,"-", "")) %>%
-  mutate(release_date=substr(release_date,1,4))
-  
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6))
+
+
 
 co5_graph = co5 %>%
   ggplot(aes(x=release_date,y=negative_ratings)) +
@@ -137,13 +143,32 @@ co5_graph
 
 #some caveats to this rudimentary relationship-number of negative ratings could show a skewed relationship if one game is more popular, or simply has more ratings (and thus more negative ratings) than another.
 
-#can do a heat map, looking at proportion of negative ratings for a given year and a given genre
+#can do a heat map, looking at proportion of negative ratings for release year and price
 
 #also-should we separate release year and month, and look to analyze that?
 
 #x and y - color code with genre
 
 ```
+
+
+```{r}
+
+#FOLLOW-UP CODE FOR FIVE
+
+
+co5 = steam_games_final %>%
+  select(release_date,negative_ratings,price) %>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
+  group_by(release_year,release_month) %>%
+  summarise(mean_price=mean(price))
+  
+
+ggplot(co5,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=mean_price)) + scale_fill_distiller(palette = "YlGn", direction=2) 
+  
+```
+
 
 # **QUESTION 6: Is there a relationship between required age to play the game and the number of achievements?**
 
@@ -175,9 +200,11 @@ ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
 
 playtimev.ratings= steam_games_final %>% 
   select(positive_ratings, average_playtime)
-ggplot(steam_games_final,aes(x=average_playtime,y=positive_ratings))+geom_smooth()
+ggplot(steam_games_final,aes(x=average_playtime,y=positive_ratings))+geom_point()
 
-#correlation follow-up question?
+#genre as color fill? remove outliers?
+
+
 
 ```
 
@@ -187,6 +214,8 @@ ggplot(steam_games_final,aes(x=average_playtime,y=positive_ratings))+geom_smooth
 ownersv.price= steam_games_final %>% 
   select(price, owners)
 ggplot(steam_games_final,aes(x=owners, y=price))+geom_point()+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
 
 ```
 
