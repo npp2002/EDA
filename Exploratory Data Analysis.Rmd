@@ -49,9 +49,6 @@ library(stringr)
 
 steam_games <- read.csv("steam.csv")
 tag_data <- read.csv("steamspy_tag_data.csv") #let's keep the app_id in case we want to join with tag data. Tag data has a bunch of genre indicators that could give us a glimpse into how voters perceive each video game. There are a TON of indicator variables so I don't know if we have the time or capacity to work with it entirely but it looks really really cool.
-tag_data
-
-steam_games
 
 steam_games_final = steam_games %>%
   rename(age=required_age) %>%
@@ -60,8 +57,6 @@ steam_games_final = steam_games %>%
 
 
 steam_games_final
-
-#over years, look at top ten genres and how the number of owners increases or decreases over time with a heat map. This can be a follow-up question without code for now. 
 
 ```
 
@@ -124,7 +119,6 @@ co5 = steam_games_final %>%
   mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6))
 
 
-
 co5_graph = co5 %>%
   ggplot(aes(x=release_date,y=negative_ratings)) +
   geom_bar(stat="identity",fill="pink") +
@@ -134,22 +128,12 @@ co5_graph = co5 %>%
 
 co5_graph
 
-
-
-#some caveats to this rudimentary relationship-number of negative ratings could show a skewed relationship if one game is more popular, or simply has more ratings (and thus more negative ratings) than another.
-
-#can do a heat map, looking at proportion of negative ratings for release year and price
-
-#also-should we separate release year and month, and look to analyze that?
-
-#x and y - color code with genre
-
 ```
 
-# **FOLLOW-UP QUESTION/CODE: How does price of video games change across month and year?**
+# **FOLLOW-UP QUESTION/CODE: How does price/proportion of negative ratings change across month and year?**
 
 ```{r}
-
+#PRICE
 co5 = steam_games_final %>%
   select(release_date,negative_ratings,price) %>%
   mutate(release_date=str_replace_all(release_date,"-", "")) %>%
@@ -159,6 +143,17 @@ co5 = steam_games_final %>%
   
 
 ggplot(co5,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=mean_price)) + scale_fill_distiller(palette = "YlGn", direction=2) 
+
+
+#NEGATIVE RATINGS PROPORTIONS
+co55 = steam_games_final %>%
+  select(release_date,negative_ratings,positive_ratings)%>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
+  group_by(release_year,release_month) %>%
+  summarise(prop_neg_ratings = mean(negative_ratings/(negative_ratings + positive_ratings)))
+
+ggplot(co55,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=prop_neg_ratings)) + scale_fill_distiller(palette = "YlGn", direction=2)
   
 ```
 
@@ -207,7 +202,7 @@ ggplot(playtimev.ratings,aes(x=average_playtime,y=pos_rate_prop))+geom_point()+l
 
 ```
 
-# **FOLLOW UP QUESTION/CODE**
+# **FOLLOW UP QUESTION/CODE: How do the top ten developer games change in average playtime as their proportion of positive ratings increase?**
 
 ```{r}
 
@@ -263,8 +258,6 @@ ggplot(steam_games_1, aes(x=as.numeric(release_year),y=mean_age)) +
 # **QUESTION 10: Is there a relationship between the number of platforms that the game can be played on and number of owners?**
 
 ```{r}
-
-steam_games_final
 
 owner_test = c("100-200", "200-400")
 test1 <- find_mids(owner_test)
