@@ -101,11 +101,15 @@ head(steam_games_negative, 5)
 ```{r}
 
 achievements <- steam_games_final %>%
-  select(categories, achievements, average_playtime) %>%
-  group_by(categories) %>% summarise_each(funs(sum)) %>%
+  select(categories, achievements, median_playtime) %>%
+  group_by(categories) %>% 
+  summarise_each(funs(sum)) %>%
   arrange(desc(achievements))
 
 achievements 
+
+ggplot(steam_games_final,aes(x=median_playtime,y=achievements))+geom_point() + geom_smooth() +
+  ggtitle("In-Game Achievements vs. median Playtime")
 
 ```
 
