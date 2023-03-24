@@ -61,8 +61,7 @@ steam_games_final = steam_games %>%
 
 steam_games_final
 
-
-
+#over years, look at top ten genres and how the number of owners increases or decreases over time with a heat map. This can be a follow-up question without code for now. 
 
 ```
 
@@ -74,7 +73,7 @@ team_games_genre <- steam_games_final %>%
     group_by(genres) %>%
   summarise_each(funs(sum)) %>%
     arrange(desc(price)) 
-head(steam_games_genre)
+head(team_games_genre)
 
 #It looks like with Action;Indie having the highest average price, some genres are indeed more expensive than the others presumably because of the demand of these genres.
 ```
@@ -106,7 +105,6 @@ head(steam_games_negative, 5)
 
 ```{r}
 
-
 achievements <- steam_games_final %>%
   select(categories, achievements, average_playtime) %>%
   group_by(categories) %>% summarise_each(funs(sum)) %>%
@@ -114,7 +112,6 @@ achievements <- steam_games_final %>%
 
 achievements 
 
-#
 ```
 
 # **QUESTION 5: Is there a relationship between the release date and the number of negative ratings for a game?**
@@ -149,8 +146,7 @@ co5_graph
 
 ```
 
-# **FOLLOW-UP QUESTION/CODE**
-
+# **FOLLOW-UP QUESTION/CODE: How does price of video games change across month and year?**
 
 ```{r}
 
@@ -171,8 +167,6 @@ ggplot(co5,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=ae
 
 ```{r}
 
-steam_games_final
-
 co6 = steam_games_final %>%
   group_by(age) %>%
   summarise(average_achievements = mean(achievements))
@@ -180,7 +174,6 @@ co6 = steam_games_final %>%
 co6
 
 #co6[order(co6$average_achievements),]
-
 
 ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
   geom_bar(stat='identity',fill="pink") +
@@ -192,7 +185,6 @@ ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
 # **QUESTION 7: Are positive ratings higher for games that have longer average playtimes?**
 
 ```{r}
-
 
 #playtimev.ratings= steam_games_final %>% 
  # select(positive_ratings, average_playtime)
@@ -218,6 +210,7 @@ ggplot(playtimev.ratings,aes(x=average_playtime,y=pos_rate_prop))+geom_point()+l
 # **FOLLOW UP QUESTION/CODE**
 
 ```{r}
+
 develop= steam_games_final%>%
   select(positive_ratings, average_playtime, developer)%>%
   group_by(developer)%>%
@@ -237,11 +230,10 @@ ggplot(devplay,aes(x=average_playtime,y=pos_rate_prop,color=developer))+geom_poi
 # **QUESTION 8: Is there a correlation between the number of owners and the price?**
 
 ```{r}
+
 ownersv.price= steam_games_final %>% 
   select(price, owners)
 ggplot(steam_games_final,aes(x=owners, y=price))+geom_point()+theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
-
 
 ```
 
@@ -271,13 +263,14 @@ ggplot(steam_games_1, aes(x=as.numeric(release_year),y=mean_age)) +
 # **QUESTION 10: Is there a relationship between the number of platforms that the game can be played on and number of owners?**
 
 ```{r}
+
 steam_games_final
 
 owner_test = c("100-200", "200-400")
 test1 <- find_mids(owner_test)
 head(test1)
 
-find_mids <- function(owners) {
+find_mids = function(owners) {
   rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
   return(rowMid / 1000)
 }
@@ -305,6 +298,23 @@ steam_games_4
 # **QUESTION 11: Is there a relationship between the amount of in game achievements and positive ratings?**
 
 ```{r}
+q11 <- steam_games %>% 
+  select(achievements, positive_ratings, negative_ratings) %>%
+  mutate(prop_pos = positive_ratings/(positive_ratings+negative_ratings)) %>%
+  select(achievements, prop_pos)
+q11
+
+
+
+q11_graph <- q11 %>%
+  ggplot(aes(x=achievements, y=prop_pos)) + 
+  geom_point() + 
+  geom_smooth()+
+  xlab("#of In-Game Achievements") + ylab("Proportion of Positive Ratings") +
+  ggtitle("How The Proportion of Positive Ratings Changes According To \nthe # of In Game Achievements " )
+
+
+q11_graph
 
 ```
 
@@ -312,6 +322,22 @@ steam_games_4
 
 ```{r}
 
+q12 <- steam_games %>% 
+  select(price, positive_ratings, negative_ratings) %>%
+  mutate(prop_pos = positive_ratings/(positive_ratings+negative_ratings)) %>%
+  select(price, prop_pos)
+arrange(q12, desc(prop_pos))
+
+
+q12_graph <- q12 %>%
+  ggplot(aes(x=prop_pos, y=price)) + 
+  geom_point(aes(color = ifelse(prop_pos>0.5, 'salmon', 'turquoise'))) +
+  scale_colour_manual(labels = c("More (-) Ratings", "More (+) Ratings"), values=c('turquoise', 'salmon')) + 
+  labs(color = "Ratings")+
+  xlab("Proportion of Positive Ratings") + ylab("Price($)") + 
+  ggtitle("How Price Changes According to Rating")
+
+q12_graph
 ```
 
 
