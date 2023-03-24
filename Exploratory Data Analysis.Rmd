@@ -55,20 +55,24 @@ steam_games_final = steam_games %>%
   mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
   filter(english==1)
 
-
 steam_games_final
 
 ```
 
-# **QUESTION 1: Are some genres more expensive than others?**
+# **QUESTION 1: Are some genre combinations more expensive than others?**
 
 ```{r}
 team_games_genre <- steam_games_final %>%
-  select("genres", "price") %>%
+  select(genres, price) %>%
     group_by(genres) %>%
-  summarise_each(funs(sum)) %>%
-    arrange(desc(price)) 
+  summarise(avg_price=mean(price)) %>%
+    arrange(desc(avg_price)) 
+
 head(team_games_genre)
+
+team_games_genre %>%
+  kbl(caption="P") %>%
+  kable_styling()
 
 #It looks like with Action;Indie having the highest average price, some genres are indeed more expensive than the others presumably because of the demand of these genres.
 ```
@@ -185,12 +189,6 @@ ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
 
 ```{r}
 
-#playtimev.ratings= steam_games_final %>% 
- # select(positive_ratings, average_playtime)
-#ggplot(steam_games_final,aes(x=average_playtime,y=positive_ratings))+geom_point()
-
-#genre as color fill? remove outliers?
-
 steam_games_final=steam_games_final%>%
   mutate(pos_rate_prop=positive_ratings/(positive_ratings+negative_ratings))%>%
   mutate(neg_rate_prop=negative_ratings/(positive_ratings+negative_ratings))
@@ -220,7 +218,9 @@ devplay=playtimev.ratings%>%
   semi_join(develop,by="developer")%>%
   filter(average_playtime<25000)
 
-ggplot(devplay,aes(x=average_playtime,y=pos_rate_prop,color=developer))+geom_point()+labs(x="Average Playtime", y="Proportion of Potitive Ratings", title="Positive Ratings vs. Average Playtime for Developers", color="Developers")
+ggplot(devplay,aes(x=average_playtime,y=pos_rate_prop,color=developer)) +
+  geom_point() +
+  labs(x="Average Playtime", y="Proportion of Potitive Ratings", title="Positive Ratings vs. Average Playtime for Developers", color="Developers")
 
 ##Top 10 developers are shown here, but only 7 appear because I filtered out any average playtimes that were 0. I also filtered out any average playtimes over 25000 hours to remove a singular outlier.
 
@@ -230,16 +230,30 @@ ggplot(devplay,aes(x=average_playtime,y=pos_rate_prop,color=developer))+geom_poi
 
 ```{r}
 
+#CHANGED
+
+find_mids = function(owners) {
+  rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
+  return(rowMid / 1000)
+}
+
 ownersv.price= steam_games_final %>% 
-  select(price, owners)
-ggplot(steam_games_final,aes(x=owners, y=price))+geom_point()+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  select(price,owners) %>%
+  group_by(price) %>%
+  summarise(mean_owners = mean(find_mids(owners)))
+
+
+ggplot(ownersv.price,aes(x=price, y=mean_owners)) + 
+  geom_point(color="red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="Price ($)", y="Number of Owners (Thousands)",title="Price vs. Number of Owners (In Thousands)") +
+  scale_y_log10() +
+  scale_x_log10()
 
 ```
 
 # **QUESTION 9: Is there a relationship between the release date of a game and its age requirements?**
 
 ```{r}
-steam_games_final
 
 steam_games_1 = steam_games_final %>%
   select(release_date,age) %>%
@@ -248,10 +262,8 @@ steam_games_1 = steam_games_final %>%
   group_by(release_year) %>%
   summarize(mean_age=mean(age)) 
 
-steam_games_1
-
 ggplot(steam_games_1, aes(x=as.numeric(release_year),y=mean_age)) + 
-  geom_point() + geom_smooth(method=lm,se=FALSE) + xlab("Release Year") + ylab("Average Required Age to Play") 
+  geom_point() + geom_smooth(method=lm,se=FALSE) + xlab("Release Year") + ylab("Average Required Age") + ggtitle("Release Year vs. Average Required Age to Play") 
 
 
 # Note: many with 0 are unrated or unsupplied.
@@ -263,17 +275,17 @@ ggplot(steam_games_1, aes(x=as.numeric(release_year),y=mean_age)) +
 
 ```{r}
 
-owner_test = c("100-200", "200-400")
-test1 <- find_mids(owner_test)
-head(test1)
-
 find_mids = function(owners) {
   rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
   return(rowMid / 1000)
 }
 
-test <- sapply(steam_games_final$owners, find_mids)
-head(test)
+#owner_test = c("100-200", "200-400")
+#test1 <- find_mids(owner_test)
+#head(test1)
+
+#test <- sapply(steam_games_final$owners, find_mids)
+#head(test)
 
 steam_games_4 = steam_games_final %>%
   mutate(mid_owner=find_mids(owners)) %>%
