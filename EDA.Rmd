@@ -45,18 +45,14 @@ library(stringr)
 
 #DATA READING AND CLEANING
 
-```{r}
-
+```{r steam-games}
 steam_games <- read.csv("steam.csv")
-tag_data <- read.csv("steamspy_tag_data.csv") #let's keep the app_id in case we want to join with tag data. Tag data has a bunch of genre indicators that could give us a glimpse into how voters perceive each video game. There are a TON of indicator variables so I don't know if we have the time or capacity to work with it entirely but it looks really really cool.
 
 steam_games_final = steam_games %>%
   rename(age=required_age) %>%
   mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
   filter(english==1)
-
-steam_games_final
-
+# steam_games_final
 ```
 
 # **QUESTION 1: Are some genre combinations more expensive than others?**
@@ -70,11 +66,7 @@ team_games_genre <- steam_games_final %>%
 
 head(team_games_genre)
 
-team_games_genre %>%
-  kbl(caption="P") %>%
-  kable_styling()
-
-#It looks like with Action;Indie having the highest average price, some genres are indeed more expensive than the others presumably because of the demand of these genres.
+#It looks like with Animation and Modeling and Design having the highest average price, some genres are indeed more expensive than the others presumably because of the demand of these genres.
 ```
 
 # **QUESTION 2: What is the relationship between the price of the product and the median playtime?**
@@ -128,7 +120,7 @@ co5 = steam_games_final %>%
 
 
 co5_graph = co5 %>%
-  ggplot(aes(x=release_date,y=negative_ratings)) +
+  ggplot(aes(x=release_year,y=negative_ratings)) +
   geom_bar(stat="identity",fill="pink") +
   xlab("Release Year") + ylab("Number of Negative Ratings") +
   theme_minimal() + 
@@ -142,7 +134,7 @@ co5_graph
 
 ```{r}
 #PRICE
-co5 = steam_games_final %>%
+price_map = steam_games_final %>%
   select(release_date,negative_ratings,price) %>%
   mutate(release_date=str_replace_all(release_date,"-", "")) %>%
   mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
@@ -150,18 +142,18 @@ co5 = steam_games_final %>%
   summarise(mean_price=mean(price))
   
 
-ggplot(co5,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=mean_price)) + scale_fill_distiller(palette = "YlGn", direction=2) 
+ggplot(price_map,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=mean_price)) + scale_fill_distiller(palette = "YlGn", direction=2) 
 
 
 #NEGATIVE RATINGS PROPORTIONS
-co55 = steam_games_final %>%
+nrating_map = steam_games_final %>%
   select(release_date,negative_ratings,positive_ratings)%>%
   mutate(release_date=str_replace_all(release_date,"-", "")) %>%
   mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
   group_by(release_year,release_month) %>%
   summarise(prop_neg_ratings = mean(negative_ratings/(negative_ratings + positive_ratings)))
 
-ggplot(co55,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=prop_neg_ratings)) + scale_fill_distiller(palette = "YlGn", direction=2)
+ggplot(nrating_map,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=prop_neg_ratings)) + scale_fill_distiller(palette = "YlGn", direction=2)
   
 ```
 
@@ -173,10 +165,6 @@ ggplot(co55,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=a
 co6 = steam_games_final %>%
   group_by(age) %>%
   summarise(average_achievements = mean(achievements))
-
-co6
-
-#co6[order(co6$average_achievements),]
 
 ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
   geom_bar(stat='identity',fill="pink") +
@@ -230,8 +218,6 @@ ggplot(devplay,aes(x=average_playtime,y=pos_rate_prop,color=developer)) +
 
 ```{r}
 
-#CHANGED
-
 find_mids = function(owners) {
   rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
   return(rowMid / 1000)
@@ -239,6 +225,7 @@ find_mids = function(owners) {
 
 ownersv.price= steam_games_final %>% 
   select(price,owners) %>%
+  filter(owners!=0) %>%
   group_by(price) %>%
   summarise(mean_owners = mean(find_mids(owners)))
 
@@ -293,27 +280,20 @@ steam_games_4 = steam_games_final %>%
   summarize(mean_mid_owner = mean(mid_owner))
 steam_games_4
 
-
-#steam_games_5 <- steam_games_final %>% 
- # mutate(platform = str_split(platforms, ";")) %>% 
-  #unnest(platform)
-
-#ggplot(steam_games_5, aes(x=platforms, y=owners)) +
- # geom_point() +
-  #labs(x="Platform Type", y="Number of Owners")
 ```
 
 
 # **QUESTION 11: Is there a relationship between the amount of in game achievements and positive ratings?**
 
 ```{r}
+
 q11 <- steam_games %>% 
   select(achievements, positive_ratings, negative_ratings) %>%
   mutate(prop_pos = positive_ratings/(positive_ratings+negative_ratings)) %>%
-  select(achievements, prop_pos)
-q11
+  select(achievements, prop_pos) %>% 
+  filter(achievements<8000)
 
-
+head(q11)
 
 q11_graph <- q11 %>%
   ggplot(aes(x=achievements, y=prop_pos)) + 
@@ -321,7 +301,6 @@ q11_graph <- q11 %>%
   geom_smooth()+
   xlab("#of In-Game Achievements") + ylab("Proportion of Positive Ratings") +
   ggtitle("How The Proportion of Positive Ratings Changes According To \nthe # of In Game Achievements " )
-
 
 q11_graph
 
@@ -335,7 +314,8 @@ q12 <- steam_games %>%
   select(price, positive_ratings, negative_ratings) %>%
   mutate(prop_pos = positive_ratings/(positive_ratings+negative_ratings)) %>%
   select(price, prop_pos)
-arrange(q12, desc(prop_pos))
+
+head(arrange(q12, desc(prop_pos)))
 
 
 q12_graph <- q12 %>%
