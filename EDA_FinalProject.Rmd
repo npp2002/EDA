@@ -147,7 +147,7 @@ co5_graph = co5 %>%
   geom_bar(stat="identity",fill="pink") +
   xlab("Release Year") + ylab("Number of Negative Ratings") +
   theme_minimal() + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + labs(title = "Release Year vs. Number of Negative Ratings")
 
 co5_graph
 ```
@@ -162,7 +162,8 @@ co6 = steam_games_final %>%
 ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
   geom_bar(stat='identity',fill="pink") +
   xlab("Age Required to Play") + ylab("Average Achievements") +
-  theme_minimal()
+  theme_minimal() + 
+  labs(title="Age Required vs. Average Achievements")
 ```
 
 # Orator: Truc Pham
