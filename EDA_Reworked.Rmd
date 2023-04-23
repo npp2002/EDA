@@ -1,0 +1,336 @@
+---
+title: "EDA_Reworked"
+output: html_document
+date: "2023-04-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+
+# Import Data Below
+steam_games <- read.csv("steam.csv")
+
+#function for finding midpoint of owners and converting to numeric
+find_mids = function(owners) {
+  rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
+  return(rowMid)
+}
+
+steam_games_final = steam_games %>%
+  mutate(mid_owner=find_mids(owners)) %>%
+  mutate(revenue = mid_owner*price) %>%
+  rename(age=required_age) %>%
+  mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
+  filter(english==1) %>%
+  mutate(release_year=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_year,1,4))
+
+steam_games_final$release_year <- as.numeric(as.character(steam_games_final$release_year))
+#steam_games_final
+
+```
+
+# Creator: Sophia Palmieri
+
+### Q1: Are positive ratings higher for games that have longer average playtimes?
+
+```{r}
+steam_games_final=steam_games_final%>%
+  mutate(pos_rate_prop=positive_ratings/(positive_ratings+negative_ratings))%>%
+  mutate(neg_rate_prop=negative_ratings/(positive_ratings+negative_ratings))
+
+playtimev.ratings= steam_games_final %>% 
+  select(pos_rate_prop, average_playtime,developer)%>%
+  filter(average_playtime<75000)%>%
+  filter(average_playtime>0)
+  
+ggplot(playtimev.ratings,aes(x=average_playtime,y=pos_rate_prop))+geom_point()+labs(x="Average Playtime", y="Proportion of Potitive Ratings", title="Positive Ratings vs. Average Playtime")
+
+##I filtered out all average playtimes that were 0 because games have to be played to be rated and greater than 75000 to reduce outliers. 
+```
+
+### Q2: Is there a correlation between the number of owners and the price?
+
+```{r}
+find_mids = function(owners) {
+  rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
+  return(rowMid / 1000)
+}
+
+ownersv.price= steam_games_final %>% 
+  select(price,owners) %>%
+  filter(owners!=0) %>%
+  group_by(price) %>%
+  summarise(mean_owners = mean(find_mids(owners)))
+
+
+ggplot(ownersv.price,aes(x=price, y=mean_owners)) + 
+  geom_point(color="red") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="Price ($)", y="Number of Owners (Thousands)",title="Price vs. Number of Owners (In Thousands)") +
+  scale_y_log10() +
+  scale_x_log10()
+
+```
+
+# Interpreter: Alison Polito
+
+### Q1: Is there a relationship between the release date of a game and its age requirements? 
+
+```{r}
+steam_games_1 = steam_games_final %>%
+  select(release_date,age) %>%
+  mutate(release_year=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_year,1,4)) %>%
+  group_by(release_year) %>%
+  summarize(mean_age=mean(age)) 
+
+ggplot(steam_games_1, aes(x=as.numeric(release_year),y=mean_age)) + 
+  geom_point() + geom_smooth(method=lm,se=FALSE) + xlab("Release Year") + ylab("Average Required Age") + ggtitle("Release Year vs. Average Required Age to Play") 
+
+
+# Note: many with 0 are unrated or unsupplied.
+# group_by month and year
+```
+
+### Q2: Is there a relationship between the number of platforms that the game can be played on and number of owners?
+
+```{r}
+find_mids = function(owners) {
+  rowMid <- rowMeans(matrix(as.numeric(unlist(str_split(owners, pattern = "-"))),ncol = 2, byrow = T))
+  return(rowMid / 1000)
+}
+
+#owner_test = c("100-200", "200-400")
+#test1 <- find_mids(owner_test)
+#head(test1)
+
+#test <- sapply(steam_games_final$owners, find_mids)
+#head(test)
+
+steam_games_4 = steam_games_final %>%
+  mutate(mid_owner=find_mids(owners)) %>%
+  group_by(num_platforms) %>%
+  summarize(mean_mid_owner = mean(mid_owner))
+steam_games_4
+
+```
+
+# Interpreter: Srinidhi Boyanapalli 
+
+### Q1: Are some genres more expensive than others?
+
+```{r}
+team_games_genre <- steam_games_final %>%
+  select(genres, price) %>%
+    group_by(genres) %>%
+  summarise(avg_price=mean(price)) %>%
+    arrange(desc(avg_price)) 
+
+head(team_games_genre)
+
+#It looks like with Animation and Modeling and Design having the highest average price, some genres are indeed more expensive than the others presumably because of the demand of these genres.
+```
+
+### Q2: What is the relationship between the price of the product and the median playtime?
+
+```{r}
+steam_games_price_median_playtime = steam_games_final %>% 
+  select(price, median_playtime)
+ggplot(steam_games_final,aes(x= price, y= median_playtime))+geom_point()
+
+#It looks like the median playtime mostly exists under 50000 and is high for prices that are lower than 100. So, cheaper games most likely have a greater median playtime presumably because of the affordability and accessibility.
+```
+
+# Deliverer: Neha Palle
+
+### Q1: Is there a correlation between the latest update and the number of negative ratings for a game?
+
+```{r}
+co5 = steam_games_final %>%
+  select(release_date,negative_ratings) %>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6))
+
+
+co5_graph = co5 %>%
+  ggplot(aes(x=release_year,y=negative_ratings)) +
+  geom_bar(stat="identity",fill="pink") +
+  xlab("Release Year") + ylab("Number of Negative Ratings") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + labs(title = "Release Year vs. Number of Negative Ratings")
+
+co5_graph
+```
+
+### Q2: Is there a correlation between required age to play the game and the number of achievements? 
+
+```{r}
+co6 = steam_games_final %>%
+  group_by(age) %>%
+  summarise(average_achievements = mean(achievements))
+
+ggplot(co6,aes(x=as.character(age),y=average_achievements)) +
+  geom_bar(stat='identity',fill="pink") +
+  xlab("Age Required to Play") + ylab("Average Achievements") +
+  theme_minimal() + 
+  labs(title="Age Required vs. Average Achievements")
+```
+
+# Orator: Truc Pham
+
+### Q1: Which developer has the most negative ratings?
+
+```{r}
+steam_games_negative <- steam_games_final %>% 
+  select("developer", "negative_ratings") %>%
+  group_by(developer) %>% 
+  summarise_each(funs(sum)) %>%
+  arrange(desc(negative_ratings))
+
+head(steam_games_negative, 5)
+```
+
+### Q2: How does the number of in-game achievements correlate with the median playtime? 
+
+```{r}
+achievements <- steam_games_final %>%
+  select(categories, achievements, median_playtime) %>%
+  group_by(categories) %>% 
+  summarise_each(funs(sum)) %>%
+  arrange(desc(achievements))
+
+achievements 
+
+ggplot(steam_games_final,aes(x=median_playtime,y=achievements))+geom_point() + geom_smooth() +
+  ggtitle("In-Game Achievements vs. median Playtime")
+```
+
+# Orator: Girija Joshi
+
+### Q1: Is there a relationship between the amount of in game achievements and positive ratings? 
+
+```{r}
+q11 <- steam_games %>% 
+  select(achievements, positive_ratings, negative_ratings) %>%
+  mutate(prop_pos = positive_ratings/(positive_ratings+negative_ratings)) %>%
+  select(achievements, prop_pos) %>% 
+  filter(achievements<8000)
+
+head(q11)
+
+q11_graph <- q11 %>%
+  ggplot(aes(x=achievements, y=prop_pos)) + 
+  geom_point() + 
+  geom_smooth()+
+  xlab("#of In-Game Achievements") + ylab("Proportion of Positive Ratings") +
+  ggtitle("How The Proportion of Positive Ratings Changes According To \nthe # of In Game Achievements " )
+
+q11_graph
+```
+
+### Q2: Are games with more positive ratings priced higher than those with negative ratings?
+
+```{r}
+q12 <- steam_games %>% 
+  select(price, positive_ratings, negative_ratings) %>%
+  mutate(prop_pos = positive_ratings/(positive_ratings+negative_ratings)) %>%
+  select(price, prop_pos)
+
+head(arrange(q12, desc(prop_pos)))
+
+
+q12_graph <- q12 %>%
+  ggplot(aes(x=prop_pos, y=price)) + 
+  geom_point(aes(color = ifelse(prop_pos>0.5, 'salmon', 'turquoise'))) +
+  scale_colour_manual(labels = c("More (-) Ratings", "More (+) Ratings"), values=c('turquoise', 'salmon')) + 
+  labs(color = "Ratings")+
+  xlab("Proportion of Positive Ratings") + ylab("Price($)") + 
+  ggtitle("How Price Changes According to Rating")
+
+q12_graph
+```
+
+# Follow-up Questions
+
+### New Questions Based Off Initial Investigation
+
+- Q1: How do the top ten developer games change in average playtime as their proportion of positive ratings increase?
+- Q2: How does the price/proportion of negative ratings change across month and year?
+- Q3: How do the number of owners for the most popular genres (top ten) change across time (years)? 
+- Q4: Does the relationship between number of in-game achievements and positive ratings change over time? If so, how? 
+
+### Investigation of Follow-up Questions
+
+GIVE WHAT 2 QUESTIONS YOU ATTEMPTED TO INVESTIGATE FURTHER IN COMPLETE SENTENCES 
+
+We decided to investigate Q1 and Q2 in further detail.
+
+```{r}
+
+DATA2 = na.omit(steam_games_final) %>%
+  crossv_kfold(20)
+
+```
+
+
+SHOW AT LEAST 2 TABLES OR FIGURES BELOW THAT EXPLORE ANSWERS FOR THE QUESTIONS YOU ARE INVESTIGATING FURTHER.
+
+```{r}
+
+popular <- steam_games_final %>% 
+   separate_rows(genres,sep=";") %>% 
+   count(genres) %>%
+   arrange(desc(n))
+
+#Top ten genres = Indie, Action, Casual, Adventure, Strategy, Simulation, RPG, Early Access, Free to Play, Sports
+
+```
+
+
+
+```{r}
+#How do the top ten developer games change in average playtime as their proportion of positive ratings increase?
+
+develop= steam_games_final%>%
+  select(positive_ratings, average_playtime, developer)%>%
+  group_by(developer)%>%
+  summarize(n=n())%>%
+  arrange(desc(n))%>%
+  head(10)
+devplay=playtimev.ratings%>%
+  semi_join(develop,by="developer")%>%
+  filter(average_playtime<25000)
+
+ggplot(devplay,aes(x=average_playtime,y=pos_rate_prop,color=developer)) +
+  geom_point() +
+  labs(x="Average Playtime", y="Proportion of Potitive Ratings", title="Positive Ratings vs. Average Playtime for Developers", color="Developers")
+
+##Top 10 developers are shown here, but only 7 appear because I filtered out any average playtimes that were 0. I also filtered out any average playtimes over 25000 hours to remove a singular outlier.
+```
+
+```{r}
+#How does the price/proportion of negative ratings change across month and year?
+
+
+price_map = steam_games_final %>%
+  select(release_date,negative_ratings,price) %>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
+  group_by(release_year,release_month) %>%
+  summarise(mean_price=mean(price))
+  
+
+ggplot(price_map,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=mean_price)) + scale_fill_distiller(palette = "YlGn", direction=2) +
+  labs(x="Release Month",y="Release Year",title = "Proportion of Price Across Month and Year")
+
+nrating_map = steam_games_final %>%
+  select(release_date,negative_ratings,positive_ratings)%>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
+  group_by(release_year,release_month) %>%
+  summarise(prop_neg_ratings = mean(negative_ratings/(negative_ratings + positive_ratings)))
+
+ggplot(nrating_map,mapping = aes(x=release_month,y=release_year)) + geom_tile(mapping=aes(fill=prop_neg_ratings)) + scale_fill_distiller(palette = "YlGn", direction=2) + 
+  labs(x="Release Month",y="Release Year",title = "Proportion of Negative Ratings Across Month and Year")
+```
