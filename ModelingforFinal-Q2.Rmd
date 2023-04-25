@@ -72,21 +72,29 @@ predictor_vars <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","
 predictor_vars.MATRIX <- as.matrix(predictor_vars)
 ridge_mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=0)
 plot(ridge_mod,xvar="lambda")
+
+legend("topright", legend=colnames(predictor_vars.MATRIX), col=1:ncol(predictor_vars.MATRIX), lwd=2)
 ```
 
 ##LASSO REGRESSION
 
 ```{r}
-response_var <- steam_games_genre_grep$revenue
-predictor_vars <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","is.strategy","is.simulation","is.rpg","is.earlyaccess","is.freetoplay","is.sports","pos_rate_prop")]
-predictor_vars.MATRIX <- as.matrix(predictor_vars)
-lasso.mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=1)
-plot(lasso.mod,xvar="lambda")
+response_var3 <- steam_games_genre_grep$revenue
+predictor_vars3 <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","is.strategy","is.simulation","is.rpg","is.earlyaccess","is.freetoplay","is.sports","pos_rate_prop")]
+predictor_vars3.MATRIX <- as.matrix(predictor_vars3)
+lasso.mod <- glmnet(x=predictor_vars3.MATRIX,y=response_var3,alpha=1)
+plot(lasso.mod,xvar="lambda",col=1:ncol(predictor_vars3.MATRIX))
 
+legend("topright", legend=colnames(predictor_vars3.MATRIX), col=1:ncol(predictor_vars3.MATRIX), lwd=2)
 
+#WHAT MAKES A LASSO REGRESSION COOL? it can be used to identify the most important variables that are predictive of your outcome variable, and can also help to prevent overfitting by reducing the impact of variables that may be less important.
+
+#you can identify which variables have the highest coefficients (i.e., the most important predictors), and also see how the coefficients change as you increase the strength of the regularization penalty.
+
+#as seen by the graph below, the highest predictors are is.action and is.indie. This makes sense because they are the most popular genres and should indicate 
 ```
 
-
+##MAYBE A POLYNOMIAL MODEL?
 
 
 
