@@ -17,6 +17,7 @@ find_mids = function(owners) {
   return(rowMid)
 }
 
+#added revenue as a column variable which is just owners multipled by price
 steam_games_final = steam_games %>%
   mutate(mid_owner=find_mids(owners)) %>%
   mutate(revenue = mid_owner*price) %>%
@@ -32,13 +33,11 @@ steam_games_final = steam_games %>%
 steam_games_final$release_year <- as.numeric(as.character(steam_games_final$release_year))
 
 steam_games_final$release_month <- as.numeric(as.character(steam_games_final$release_month))
-#steam_games_final
 
-desired_genres <- c("Indie","Action","Casual","Adventure","Strategy","Simulation","RPG","Early Access","Free to Play","Sports")
 
-steam_games_genre <- subset(steam_games_final, genres %in% desired_genres) #we can use this dataset for modeling with genre because it gets rid of multiple genre categories?
 
-#steam_games_genre_fill <- separate_rows(steam_games_final, genres, sep = ";")
+
+
 ```
 
 # Creator: Sophia Palmieri

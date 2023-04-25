@@ -1,0 +1,71 @@
+---
+title: "Model for Q2"
+output: html_document
+date: "2023-04-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=F)
+options(scipen=999)
+library(tidyverse)    #Essential Functions
+```
+
+## PREPPING DATASET
+
+```{r}
+steam_games_genre_grep = steam_games_final %>%
+  mutate(is.action=grepl("Action",genres)) %>%
+  mutate(is.indie=grepl("Indie",genres)) %>%
+  mutate(is.casual=grepl("Casual",genres)) %>%
+  mutate(is.strategy=grepl("Strategy",genres)) %>%
+  mutate(is.adventure=grepl("Adventure",genres)) %>%
+  mutate(is.simulation=grepl("Simulation",genres)) %>%
+  mutate(is.rpg=grepl("RPG",genres)) %>%
+  mutate(is.earlyaccess=grepl("Early Access",genres)) %>%
+  mutate(is.freetoplay=grepl("Free to Play",genres)) %>%
+  mutate(is.sports=grepl("Sports",genres))
+
+steam_games_test_train = steam_games_genre_grep %>%
+  mutate(Set = sample(c("Train","Test"),size=nrow(steam_games_genre_grep),replace=TRUE,prob=c(0.8,0.2)))
+
+train.steam = filter(steam_games_test_train,Set=="Train")
+test.steam = filter(steam_games_test_train,Set=="Test")
+```
+
+
+## MODELING
+```{r}
+lm1 = lm(revenue~is.action+is.indie+is.casual+is.strategy+is.simulation,data=train.steam)
+lm2 = lm(revenue~is.action+is.indie+is.casual+is.strategy+is.simulation+is.rpg+is.earlyaccess+is.freetoplay+is.sports,data=train.steam)
+
+test.steam2 = test.steam %>% 
+  add_predictions(lm1,var="lm1") %>%
+  add_predictions(lm2,var="lm2") %>%
+  add_residuals(lm1,var="lm1.res") %>%
+  add_residuals(lm2,var="lm2.res")
+
+MAE.func <- function(residual){
+  LOSS = mean(abs(residual))
+  return(LOSS)
+}
+
+MSE.func <- function(residual){
+  LOSS <- mean(residual^2)
+}
+
+lm1.mae <- MAE.func(test.steam2$lm1.res)
+lm2.mae <- MAE.func(test.steam2$lm2.res)
+lm1.mse <- MSE.func(test.steam2$lm1.res)
+lm2.mse <- MSE.func(test.steam2$lm2.res)
+
+print(lm1.mae)
+print(lm2.mae)
+print(lm1.mse)
+print(lm2.mse)
+```
+
+
+
+
+
+
