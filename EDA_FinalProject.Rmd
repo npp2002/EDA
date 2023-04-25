@@ -258,6 +258,22 @@ We decided to investigate Q1 and Q2 in further detail.
 SHOW AT LEAST 2 TABLES OR FIGURES BELOW THAT EXPLORE ANSWERS FOR THE QUESTIONS YOU ARE INVESTIGATING FURTHER.
 
 ```{r}
+
+#
+#first, remove the colons between each genre
+#then, turn
+
+table(unlist(strsplit(as.character(steam_games_final$genres), ";")))
+
+popular <- steam_games_final %>% 
+   separate_rows(genres) %>% 
+   distinct %>% 
+   group_by(genres) %>% 
+   summarise(genres = toString(genres))
+```
+
+
+```{r}
 #How do the top ten developer games change in average playtime as their proportion of positive ratings increase?
 
 develop= steam_games_final%>%

@@ -24,11 +24,19 @@ steam_games_final = steam_games %>%
   mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
   filter(english==1) %>%
   mutate(release_year=str_replace_all(release_date,"-", "")) %>%
-  mutate(release_year=substr(release_year,1,4))
+  mutate(release_year=substr(release_year,1,4)) %>%
+  mutate(pos_rate_prop=positive_ratings/(positive_ratings+negative_ratings))%>%
+  mutate(neg_rate_prop=negative_ratings/(positive_ratings+negative_ratings)) %>%
+  filter()
 
 steam_games_final$release_year <- as.numeric(as.character(steam_games_final$release_year))
 #steam_games_final
 
+desired_genres <- c("Indie","Action","Casual","Adventure","Strategy","Simulation","RPG","Early Access","Free to Play","Sports")
+
+steam_games_genre <- subset(steam_games_final, genres %in% desired_genres) #we can use this dataset for modeling with genre because it gets rid of multiple genre categories?
+
+#steam_games_genre_fill <- separate_rows(steam_games_final, genres, sep = ";")
 ```
 
 # Creator: Sophia Palmieri
