@@ -21,9 +21,11 @@ TEST=sgf %>% filter(SPLIT=="TEST")
 
 TRAIN %>% 
   summarize(mean=mean(price),sd=sd(price),min=min(price),max=max(price))
+```
 
 
-
+##MODEL 0
+```{r}
 # define the function to get fitted values
 MODEL0 <- function(DATA, COEF) {
   FIT <- COEF[1]
@@ -69,6 +71,8 @@ coef(LM0)
 
 ```
 
+
+##MODEL 1A
 ```{r}
 #Model1a 
 #Y = Bo + B1X1 + e
@@ -112,6 +116,8 @@ ggplot(data=TEST) +
   geom_point(aes(x=neg_rate_prop,y=price),color="lightskyblue2") + theme_dark() +
   geom_abline(aes(intercept=2.22,slope=7.56),color="white",size=1.5)
 ```
+
+##MODEL 1B
 ```{r}
 MODEL1B = function(DATA,COEF){
   FIT=COEF[1]+COEF[2]*DATA$release_year
@@ -147,6 +153,8 @@ TEST %>%
     geom_abline(aes(intercept=441,slope=-0.215),color="white",size=1.5)+theme_dark()
 
 ```
+
+##MODEL 2
 ```{r}
 
 LM2=lm(price~neg_rate_prop+release_year,data=TRAIN)
@@ -215,7 +223,7 @@ MODEL2.GRAPH = sgf %>%
   
 ```
 
-
+##TABLE COMPARING MAE AND MSE FOR MODEL 0, 1A, 1B AND 2
 ```{r}
 MODELS=c("MODEL 0","MODEL 1A","MODEL 1B","MODEL 2")
 MSE=c(MSE0(TEST,c(4.26)),
