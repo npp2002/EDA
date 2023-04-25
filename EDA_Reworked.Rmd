@@ -23,13 +23,15 @@ steam_games_final = steam_games %>%
   rename(age=required_age) %>%
   mutate(num_platforms = str_count(platforms,";")+1, .after=platforms) %>%
   filter(english==1) %>%
-  mutate(release_year=str_replace_all(release_date,"-", "")) %>%
-  mutate(release_year=substr(release_year,1,4)) %>%
+  mutate(release_date=str_replace_all(release_date,"-", "")) %>%
+  mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
   mutate(pos_rate_prop=positive_ratings/(positive_ratings+negative_ratings))%>%
   mutate(neg_rate_prop=negative_ratings/(positive_ratings+negative_ratings)) %>%
   filter()
 
 steam_games_final$release_year <- as.numeric(as.character(steam_games_final$release_year))
+
+steam_games_final$release_month <- as.numeric(as.character(steam_games_final$release_month))
 #steam_games_final
 
 desired_genres <- c("Indie","Action","Casual","Adventure","Strategy","Simulation","RPG","Early Access","Free to Play","Sports")

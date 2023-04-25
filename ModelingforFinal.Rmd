@@ -230,3 +230,31 @@ COMPARE=tibble(MODELS=MODELS,MSE=MSE,MAE=MAE)
 print(COMPARE)
 ```
 
+##RIDGE REGRESSION USING THREE-PREDICTOR VARIABLES
+
+```{r}
+library(glmnet)
+response_var <- steam_games_final$price
+predictor_vars <- steam_games_final[,c("neg_rate_prop","release_year","release_month")]
+predictor_vars.MATRIX <- as.matrix(predictor_vars)
+ridge_mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=0)
+plot(ridge_mod,xvar="lambda")
+
+#As the value of log lambda increases, the penalty term in the objective function becomes more dominant, and the coefficients are shrunk more towards zero. This is why the coefficients converge towards zero as log lambda nears 6
+
+#The fact that the three lines merge as log lambda nears 6 and the coefficients near 0 means that the three predictor variables may not be contributing much to the model's predictive power, and thus their coefficients are shrunk towards zero. This suggests that the model may be overfitting the data if all three predictors are included. To avoid overfitting, it may be necessary to remove some predictors or use a different type of regularization such as Lasso regression.
+
+#In some cases, having a wider range of coefficients can indicate that some predictors are more influential in predicting the outcome variable than others. However, it is important to note that the magnitude of coefficients can also be influenced by the scale of the predictor variables. For example, if one predictor variable is measured in thousands and another in ones, the coefficients for the former variable will be larger, even if it is not necessarily more influential in predicting the outcome variable.
+
+#HOW CAN WE USE THIS FOR PREDICTIONS?
+
+#Ridge regression can be used for both prediction and variable selection. It can help prevent overfitting by shrinking the coefficients of the predictor variables towards zero, and can therefore reduce the variance of the predictions.
+
+cv.obj <- cv.glmnet(x=predictor_vars.MATRIX,y=as.matrix(response_var), alpha = 0, nfolds = 10)
+optimal_lambda <- cv.obj$lambda.min
+
+ridge_coef <- coef(ridge_mod,s=0.06) #coef() function is used to obtain the coefficients for the ridge regression with lambda = 0.1. 
+
+
+```
+
