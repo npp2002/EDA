@@ -63,7 +63,28 @@ print(lm2.mae)
 print(lm1.mse)
 print(lm2.mse)
 ```
+##RIDGE REGRESSION USING GENRE AND POS_RATE_PROP AS PREDICTORS 
 
+```{r}
+library(glmnet)
+response_var <- steam_games_genre_grep$revenue
+predictor_vars <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","is.strategy","is.simulation","is.rpg","is.earlyaccess","is.freetoplay","is.sports","pos_rate_prop")]
+predictor_vars.MATRIX <- as.matrix(predictor_vars)
+ridge_mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=0)
+plot(ridge_mod,xvar="lambda")
+```
+
+##LASSO REGRESSION
+
+```{r}
+response_var <- steam_games_genre_grep$revenue
+predictor_vars <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","is.strategy","is.simulation","is.rpg","is.earlyaccess","is.freetoplay","is.sports","pos_rate_prop")]
+predictor_vars.MATRIX <- as.matrix(predictor_vars)
+lasso.mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=1)
+plot(lasso.mod,xvar="lambda")
+
+
+```
 
 
 
