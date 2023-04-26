@@ -15,6 +15,13 @@ library(tidyverse)    #Essential Functions
 How does the release year predict revenue in the top 5 most and top 5 least popular genres?
 
 ```{r}
+#find frequency of each genre type 
+popular <- steam_games_final %>% 
+   separate_rows(genres,sep=";") %>% 
+   count(genres) %>%
+   arrange(desc(n))
+
+
 steam_games_genre_grep = filter(steam_games_final,revenue>0) %>%
   mutate(is.action=grepl("Action",genres)) %>%
   mutate(is.indie=grepl("Indie",genres)) %>%
@@ -111,10 +118,15 @@ print(COMPARE)
 ```
 
 
+## CROSS VALIDATION USING A POLYNOMIAL MODEL
 ```{r}
-##CROSS VALIDATION 
+#instead of looking at how genre itself can act as a predictor variable, maybe we can look at how revenue changes with number of achievements and release_year. We can look at the revenue with the top 5 most popular genres. The top 5 least popular genres would be interesting to look at because it directly impacts the production and marketing of certain games, but the dataset does not have enough observations for this.
 
-    
+#TOP 5 MOST POPULAR GENRES: Indie, Action, Casual, Adventure, Strategy
+
+#TOP 5 LEAST POPULAR GENRES: Education, Video Production, Software Training, Audio Production, Web Publishing, 
+
+
 ```
 
 
