@@ -10,11 +10,15 @@ options(scipen=999)
 library(tidyverse)    #Essential Functions
 ```
 
-## R Markdown
+## PREP DATASET
+
+How does price change across years and months based on the proportion of negative ratings?
 
 ```{r}
-sgf = steam_games_final %>%
-  mutate(SPLIT=sample(x=c("TRAIN","TEST"),size=nrow(steam_games_final),
+
+steam_games_p = filter(steam_games_final,price!=0)
+sgf = steam_games_p %>%
+  mutate(SPLIT=sample(x=c("TRAIN","TEST"),size=nrow(steam_games_p),
                   replace=T,prob=c(0.85,0.15)))
 TRAIN=sgf %>%  filter(SPLIT=="TRAIN")
 TEST=sgf %>% filter(SPLIT=="TEST")
@@ -242,8 +246,10 @@ print(COMPARE)
 
 ```{r}
 library(glmnet)
-response_var <- steam_games_final$price
-predictor_vars <- steam_games_final[,c("neg_rate_prop","release_year","release_month")]
+
+
+response_var <- steam_games_p$price
+predictor_vars <- steam_games_p[,c("neg_rate_prop","release_year","release_month")]
 predictor_vars.MATRIX <- as.matrix(predictor_vars)
 ridge_mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=0)
 plot(ridge_mod,xvar="lambda")
@@ -261,28 +267,30 @@ plot(ridge_mod,xvar="lambda")
 cv.obj <- cv.glmnet(x=predictor_vars.MATRIX,y=as.matrix(response_var), alpha = 0, nfolds = 10)
 optimal_lambda <- cv.obj$lambda.min #this cross-validation was performed to isolate the optimal lambda value using three predictor variables 
 
-ridge_coef <- coef(ridge_mod,s=0.06) #coef() function is used to obtain the coefficients for the ridge regression with lambda = 0.06.
+ridge_coef <- coef(ridge_mod,s=0.066) #coef() function is used to obtain the coefficients for the ridge regression with lambda = 0.06.
 
-#intercept = 400, beta1 = -2.55, beta2 = -0.19, beta3 = -0.002
+#intercept = 336, beta1 = -2.75, beta2 = -0.16, beta3 = -0.006
 
 
 
 train.model.func <- function(data, beta0, beta1, beta2, beta3) {
   model <- lm(price ~ neg_rate_prop + release_year + release_month, data = data, 
-              lambda = 0.06, intercept = beta0, coef = c(beta1, beta2, beta3))
+              lambda = 0.066, intercept = beta0, coef = c(beta1, beta2, beta3))
   return(model)
 }
 
-BEST.MOD <- steam_games_final %>% 
-  mutate(best.model = predict(train.model.func(data = ., beta0 = 399.221596204, 
-                                                beta1 = -2.559058954, beta2 = 
-                                                 -0.194593524, 
-                                                beta3 = -0.001589672)))
+BEST.MOD <- steam_games_p %>% 
+  mutate(best.model = predict(train.model.func(data = ., beta0 = 336, 
+                                                beta1 = -2.75, beta2 = 
+                                                 -0.16, 
+                                                beta3 = -0.006)))
 
 ggplot(filter(BEST.MOD,price<50), aes(x = price, y = best.model)) +
-  geom_point() +
+  geom_point(alpha=0.3) +
   xlab("Actual Price") + ylab("Fitted Price") +
   geom_abline(intercept = 0, slope = 1, color = "red")
 
 ```
+
+#polynomial approach?
 

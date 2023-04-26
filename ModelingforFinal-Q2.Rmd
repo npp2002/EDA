@@ -10,10 +10,12 @@ options(scipen=999)
 library(tidyverse)    #Essential Functions
 ```
 
-## PREPPING DATASET
+## PREPPING/VISUALIZING DATASET
+
+How does the release year predict revenue in the top 5 most and top 5 least popular genres?
 
 ```{r}
-steam_games_genre_grep = steam_games_final %>%
+steam_games_genre_grep = filter(steam_games_final,revenue>0) %>%
   mutate(is.action=grepl("Action",genres)) %>%
   mutate(is.indie=grepl("Indie",genres)) %>%
   mutate(is.casual=grepl("Casual",genres)) %>%
@@ -25,45 +27,100 @@ steam_games_genre_grep = steam_games_final %>%
   mutate(is.freetoplay=grepl("Free to Play",genres)) %>%
   mutate(is.sports=grepl("Sports",genres))
 
+steam_genres_top = steam_games_genre_grep %>%
+  gather(is.action:is.sports, key="Top_Genre", value="Present")
+
+sgt_revenue <- sgt %>% 
+  group_by(release_year, Top_Genre) %>% 
+  summarize(total_revenue = sum(revenue))
+
+ggplot(aes(x = release_year, y = total_revenue), data = sgt_revenue) + 
+  geom_bar(aes(fill = Top_Genre), stat = "identity") +
+  scale_x_continuous(breaks = seq(min(sgt$release_year), max(sgt$release_year), 1)) +
+  xlab("Release Year") +
+  ylab("Total Revenue") +
+  ggtitle("Top 10 Genre Change over Time vs. Revenue") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+##TRAIN AND TEST
+```{r}
 steam_games_test_train = steam_games_genre_grep %>%
   mutate(Set = sample(c("Train","Test"),size=nrow(steam_games_genre_grep),replace=TRUE,prob=c(0.8,0.2)))
 
 train.steam = filter(steam_games_test_train,Set=="Train")
 test.steam = filter(steam_games_test_train,Set=="Test")
+
 ```
 
 
-## MODELING
+## LINEAR MODELING
 ```{r}
 lm1 = lm(revenue~is.action+is.indie+is.casual+is.strategy+is.simulation,data=train.steam)
 lm2 = lm(revenue~is.action+is.indie+is.casual+is.strategy+is.simulation+is.rpg+is.earlyaccess+is.freetoplay+is.sports,data=train.steam)
+lm3 = lm(revenue~is.action+is.indie+is.casual+is.strategy+is.simulation+release_year,data=train.steam)
+lm4 = lm(revenue~is.action+is.indie+is.casual+release_year,data=train.steam)
+lm5 = lm(revenue~is.action+is.indie+release_year,data=train.steam)
+lm6 = lm(revenue~is.action+is.indie+release_year+achievements,data=train.steam)
 
 test.steam2 = test.steam %>% 
   add_predictions(lm1,var="lm1") %>%
   add_predictions(lm2,var="lm2") %>%
+  add_predictions(lm3,var="lm3") %>%
+  add_predictions(lm4,var="lm4") %>%
+  add_predictions(lm5,var="lm5") %>%
+  add_predictions(lm6,var="lm6") %>%
   add_residuals(lm1,var="lm1.res") %>%
-  add_residuals(lm2,var="lm2.res")
+  add_residuals(lm2,var="lm2.res") %>%
+  add_residuals(lm3,var="lm3.res") %>%
+  add_residuals(lm4,var="lm4.res") %>%
+  add_residuals(lm5,var="lm5.res") %>%
+  add_residuals(lm6,var="lm6.res") 
+  
 
 MAE.func <- function(residual){
   LOSS = mean(abs(residual))
   return(LOSS)
 }
 
-MSE.func <- function(residual){
-  LOSS <- mean(residual^2)
+RMSE.func <- function(residual){
+  LOSS <- sqrt(mean(residual^2))
 }
 
-lm1.mae <- MAE.func(test.steam2$lm1.res)
-lm2.mae <- MAE.func(test.steam2$lm2.res)
-lm1.mse <- MSE.func(test.steam2$lm1.res)
-lm2.mse <- MSE.func(test.steam2$lm2.res)
+#make html table for this
 
-print(lm1.mae)
-print(lm2.mae)
-print(lm1.mse)
-print(lm2.mse)
+MODELS=c("MODEL 1","MODEL 2","MODEL 3","MODEL 4","MODEL 5","MODEL 6")
+MAE=c(MAE.func(test.steam2$lm1.res),
+      MAE.func(test.steam2$lm2.res),
+      MAE.func(test.steam2$lm3.res),
+      MAE.func(test.steam2$lm4.res),
+      MAE.func(test.steam2$lm5.res),
+      MAE.func(test.steam2$lm6.res))
+RMSE=c(RMSE.func(test.steam2$lm1.res),
+       RMSE.func(test.steam2$lm2.res),
+       RMSE.func(test.steam2$lm3.res),
+       RMSE.func(test.steam2$lm4.res),
+       RMSE.func(test.steam2$lm5.res),
+       RMSE.func(test.steam2$lm6.res))
+COMPARE=tibble(MODELS=MODELS,RMSE=RMSE,MAE=MAE)
+print(COMPARE)
+
+#what I am noticing - it doesn't seem like genre is a good predictor variable. This could also be attributed to the test and train set, which is skewing data. Because a majority of games are released after 2000, the train set could potentially have more recent releases compared to the test. Let's try cross validation on a polynomial model?
 ```
-##RIDGE REGRESSION USING GENRE AND POS_RATE_PROP AS PREDICTORS 
+
+
+```{r}
+##CROSS VALIDATION 
+
+    
+```
+
+
+
+
+##RIDGE REGRESSION USING GENRE AND POS_RATE_PROP and GENRES AS PREDICTORS 
 
 ```{r}
 library(glmnet)
@@ -92,9 +149,22 @@ legend("topright", legend=colnames(predictor_vars3.MATRIX), col=1:ncol(predictor
 #you can identify which variables have the highest coefficients (i.e., the most important predictors), and also see how the coefficients change as you increase the strength of the regularization penalty.
 
 #as seen by the graph below, the highest predictors are is.action and is.indie. This makes sense because they are the most popular genres and should indicate 
+
+#cross validation
 ```
 
-##MAYBE A POLYNOMIAL MODEL?
+##MAYBE A K-NN MODEL?
+
+predict the revenue of a game based on a new game which falls within one genre
+
+k=5 most similar games to this "new game"
+
+visualization, k-NN for prediction, transform k-NN
+
+## POLYNOMIAL MODEL?
+
+
+
 
 
 
