@@ -22,7 +22,7 @@ popular <- steam_games_final %>%
    arrange(desc(n))
 
 
-steam_games_genre_grep = filter(steam_games_final,revenue>0) %>%
+steam_games_genre_grep = filter(steam_games_final,revenue!=0) %>%
   mutate(is.action=grepl("Action",genres)) %>%
   mutate(is.indie=grepl("Indie",genres)) %>%
   mutate(is.casual=grepl("Casual",genres)) %>%
@@ -32,7 +32,8 @@ steam_games_genre_grep = filter(steam_games_final,revenue>0) %>%
   mutate(is.rpg=grepl("RPG",genres)) %>%
   mutate(is.earlyaccess=grepl("Early Access",genres)) %>%
   mutate(is.freetoplay=grepl("Free to Play",genres)) %>%
-  mutate(is.sports=grepl("Sports",genres))
+  mutate(is.sports=grepl("Sports",genres)) %>%
+  mutate(log_revenue=log(revenue))
 
 steam_genres_top = steam_games_genre_grep %>%
   gather(is.action:is.sports, key="Top_Genre", value="Present")
@@ -71,6 +72,7 @@ lm3 = lm(revenue~is.action+is.indie+is.casual+is.strategy+is.simulation+release_
 lm4 = lm(revenue~is.action+is.indie+is.casual+release_year,data=train.steam)
 lm5 = lm(revenue~is.action+is.indie+release_year,data=train.steam)
 lm6 = lm(revenue~is.action+is.indie+release_year+achievements,data=train.steam)
+lm7 = lm(log_revenue~is.action+is.indie+is.casual+release_year,data=train.steam)
 
 test.steam2 = test.steam %>% 
   add_predictions(lm1,var="lm1") %>%
@@ -79,12 +81,14 @@ test.steam2 = test.steam %>%
   add_predictions(lm4,var="lm4") %>%
   add_predictions(lm5,var="lm5") %>%
   add_predictions(lm6,var="lm6") %>%
+  add_predictions(lm7,var="lm7") %>%
   add_residuals(lm1,var="lm1.res") %>%
   add_residuals(lm2,var="lm2.res") %>%
   add_residuals(lm3,var="lm3.res") %>%
   add_residuals(lm4,var="lm4.res") %>%
   add_residuals(lm5,var="lm5.res") %>%
-  add_residuals(lm6,var="lm6.res") 
+  add_residuals(lm6,var="lm6.res") %>%
+  add_residuals(lm7,var="lm7.res")
   
 
 MAE.func <- function(residual){
@@ -98,25 +102,60 @@ RMSE.func <- function(residual){
 
 #make html table for this
 
-MODELS=c("MODEL 1","MODEL 2","MODEL 3","MODEL 4","MODEL 5","MODEL 6")
+MODELS=c("MODEL 1","MODEL 2","MODEL 3","MODEL 4","MODEL 5","MODEL 6","MODEL 7")
 MAE=c(MAE.func(test.steam2$lm1.res),
       MAE.func(test.steam2$lm2.res),
       MAE.func(test.steam2$lm3.res),
       MAE.func(test.steam2$lm4.res),
       MAE.func(test.steam2$lm5.res),
-      MAE.func(test.steam2$lm6.res))
+      MAE.func(test.steam2$lm6.res),
+      MAE.func(test.steam2$lm7.res))
 RMSE=c(RMSE.func(test.steam2$lm1.res),
        RMSE.func(test.steam2$lm2.res),
        RMSE.func(test.steam2$lm3.res),
        RMSE.func(test.steam2$lm4.res),
        RMSE.func(test.steam2$lm5.res),
-       RMSE.func(test.steam2$lm6.res))
+       RMSE.func(test.steam2$lm6.res),
+       RMSE.func(test.steam2$lm7.res))
 COMPARE=tibble(MODELS=MODELS,RMSE=RMSE,MAE=MAE)
 print(COMPARE)
 
 #what I am noticing - it doesn't seem like genre is a good predictor variable. This could also be attributed to the test and train set, which is skewing data. Because a majority of games are released after 2000, the train set could potentially have more recent releases compared to the test. Let's try cross validation on a polynomial model?
 ```
+Interpreting the results for Model 7. Since we took the log of our target variable, revenue, the RMSE and MAE don't represent the actual error in predicting the revenue. In order to find the actual RMSE and MAE from the log of each, you must take the exponent of each value and subtract 1 (log of 0) from each. 
 
+##GRAPHING AND EVALUATING MODEL 7
+```{r}
+
+#evaluating model 5
+predicted1 <- predict(lm5, newdata = test.steam)
+actual_and_predict <- data.frame(actual = test.steam$revenue, predicted = predicted1)
+
+ggplot(actual_and_predict, aes(x = actual, y = predicted)) +
+  geom_point(alpha=0.5) +
+  scale_x_log10(labels = scales::dollar_format(prefix = "$")) +
+  scale_y_log10(labels = scales::dollar_format(prefix = "$")) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(x = "Actual Revenue", y = "Predicted Revenue") +
+  ggtitle("Actual vs. Predicted Revenue for MODEL 5")
+
+
+#evaluating model 7
+predicted2 <- predict(lm7, newdata = test.steam)
+actual_and_predict <- data.frame(actual = exp(test.steam$log_revenue), predicted = exp(predicted2))
+
+ggplot(actual_and_predict, aes(x = actual, y = predicted)) +
+  geom_point(alpha=0.5) +
+  scale_x_log10(labels = scales::dollar_format(prefix = "$")) +
+  scale_y_log10(labels = scales::dollar_format(prefix = "$")) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(x = "Actual Revenue", y = "Predicted Revenue") +
+  ggtitle("Actual vs. Predicted Revenue for MODEL 7")
+
+
+```
+
+**Interpretation:** As seen by the graphs above, it is evident that MODEL 7 fits the revenue better than MODEL 5. This can be attributed to taking the logarithm of the target variable, revenue. By taking the log of the target variable, a non-linear relationship can be converted into a linear relationship. There are also a lot of outliers evident in revenue because the price of a select few games are much higher than others, affecting the revenue. Taking the log of revenue downweights the effect of such outliers, reducing extreme value impact and making the model more attuned. 
 
 ## CROSS VALIDATION USING A POLYNOMIAL MODEL
 ```{r}
