@@ -67,6 +67,8 @@ BESTRMSE0$par
 BESTMAE0 <- optim(par = 0, fn = MAE0, DATA = TRAIN)
 BESTMAE0$par
 
+
+
 #BESTMSE0$par is the vector of optimal parameters that minimize the mean squared error (MSE) when using the optim() function.
 
 #In this case, BESTMSE0 is the output of the optim() function applied to the MSE0 function, using the TRAIN dataset as input and starting the optimization algorithm with par=0. The optim() function searches for the value of beta0 that minimizes the MSE by iteratively updating beta0 until it converges to the optimal value. The optimal value of beta0 is stored in the par component of the BESTMSE0 object.
@@ -296,10 +298,12 @@ BEST.MOD <- steam_games_p %>%
                                                  -0.16, 
                                                 beta3 = -0.006)))
 
-ggplot(filter(BEST.MOD,price<50), aes(x = price, y = best.model)) +
+ggplot(filter(BEST.MOD), aes(x = price, y = best.model)) +
   geom_point(alpha=0.3) +
   xlab("Actual Price") + ylab("Fitted Price") +
-  geom_abline(intercept = 0, slope = 1, color = "red")
+  geom_abline(intercept = 0, slope = 1, color = "red") +
+  xlim(0,30)
+
 
 ```
 

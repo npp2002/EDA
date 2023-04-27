@@ -7,6 +7,8 @@ date: "2023-04-21"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(kableExtra)
+library(reactable)
 
 # Import Data Below
 steam_games <- read.csv("steam.csv")
@@ -35,7 +37,27 @@ steam_games_final$release_month <- as.numeric(as.character(steam_games_final$rel
 
 
 
+#printing out interactive html table?
+dt = steam_games_final %>%
+  select(release_year, release_month, genres, price, revenue, neg_rate_prop, average_playtime) 
 
+reactable(dt,
+          columns = list(
+            release_year = colDef(name = "Release Year"),
+            release_month = colDef(name = "Release Month"),
+            genres = colDef(name = "Genres"),
+            price = colDef(name = "Price ($)"),
+            revenue = colDef(name = "Revenue ($)"),
+            neg_rate_prop = colDef(name = "Proportion of Negative Ratings"),
+            average_playtime = colDef(name = "Average Playtime (min)")
+          ),
+          defaultPageSize = 5,
+          sortable = TRUE,
+          filterable = TRUE,
+          striped = TRUE,
+          style = list(border = "2px solid #333",
+                       columnBorders = "2px solid #333",
+                       padding = "10px"))
 
 ```
 
