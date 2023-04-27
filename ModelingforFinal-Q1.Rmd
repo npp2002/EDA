@@ -16,7 +16,7 @@ How does price change across years and months based on the proportion of negativ
 
 ```{r}
 
-steam_games_p = filter(steam_games_final,price!=0)
+steam_games_p = filter(steam_games_final,price!=0,is.na(neg_rate_prop)!=TRUE)
 sgf = steam_games_p %>%
   mutate(SPLIT=sample(x=c("TRAIN","TEST"),size=nrow(steam_games_p),
                   replace=T,prob=c(0.85,0.15)))
@@ -28,7 +28,7 @@ TRAIN %>%
 ```
 
 
-##MODEL 0
+## MODELING USING MODEL 0: predict the price using intercept only
 ```{r}
 # define the function to get fitted values
 MODEL0 <- function(DATA, COEF) {
@@ -36,9 +36,9 @@ MODEL0 <- function(DATA, COEF) {
 }
 
 # define the MSE and MAE functions
-MSE0 <- function(DATA, COEF) {
+RMSE0 <- function(DATA, COEF) {
   ERROR <- DATA$price - MODEL0(DATA, COEF)
-  LOSS <- mean(ERROR^2)
+  LOSS <- sqrt((mean(ERROR^2)))
   return(LOSS)
 }
 
@@ -48,30 +48,28 @@ MAE0 <- function(DATA, COEF) {
   return(LOSS)
 }
 
+
+set.seed(216)
 # define the beta0 values
 COEF0 <- tibble(
-  beta0 = seq(0, 422, length = 100)
+  beta0 = seq(0, 500, length = 100)
 )
 
 COEF0 %>% 
-  mutate(MSE=purrr::map_dbl(beta0,MSE0,DATA=TRAIN),
+  mutate(RMSE=purrr::map_dbl(beta0,RMSE0,DATA=TRAIN),
          MAE=purrr::map_dbl(beta0,MAE0,DATA=TRAIN),
-         rankMSE=rank(MSE),rankMAE=rank(MAE)) %>%
-         filter(rankMSE<5,rankMAE<5)
+         rankRMSE=rank(RMSE),rankMAE=rank(MAE)) %>%
+         filter(rankRMSE<5,rankMAE<5)
 
 # fit the model using MSE and MAE
-BESTMSE0 <- optim(par = 0, fn = MSE0, DATA = TRAIN)
-BESTMSE0$par
+BESTRMSE0 <- optim(par = 0, fn = RMSE0, DATA = TRAIN)
+BESTRMSE0$par
 BESTMAE0 <- optim(par = 0, fn = MAE0, DATA = TRAIN)
 BESTMAE0$par
 
 #BESTMSE0$par is the vector of optimal parameters that minimize the mean squared error (MSE) when using the optim() function.
 
 #In this case, BESTMSE0 is the output of the optim() function applied to the MSE0 function, using the TRAIN dataset as input and starting the optimization algorithm with par=0. The optim() function searches for the value of beta0 that minimizes the MSE by iteratively updating beta0 until it converges to the optimal value. The optimal value of beta0 is stored in the par component of the BESTMSE0 object.
-
-LM0=lm(price~1,data=TRAIN)
-summary(LM0)
-coef(LM0)
 
 ```
 
@@ -84,13 +82,15 @@ coef(LM0)
 #contains two variables, visualizing price vs. negative proportions
 
 #Model for fitted values 
+
+
 MODEL1A = function(DATA,COEF){
   FIT = COEF[1]+COEF[2]*DATA$neg_rate_prop
 }
 
-MSE1A = function(DATA,COEF){
+RMSE1A = function(DATA,COEF){
   ERROR = DATA$price-MODEL1A(DATA,COEF)
-  LOSS = mean(ERROR^2)
+  LOSS = sqrt(mean(ERROR^2))
   return(LOSS)
 }
 
@@ -100,29 +100,33 @@ MAE1A = function(DATA,COEF){
   return(LOSS)
 }
 
-COEF1A=tibble(
-  beta0=runif(10000,0,500),
-  beta1=runif(10000,0,500)
+set.seed(216)
+COEF1A <- tibble(
+  beta0 = runif(10000,0,423),
+  beta1 = runif(10000,0,423)
 )
 
 COEF1A %>% 
-  mutate(MSE=apply(COEF1A,1,MSE1A,DATA=TRAIN),
+  mutate(RMSE=apply(COEF1A,1,RMSE1A,DATA=TRAIN),
          MAE=apply(COEF1A,1,MAE1A,DATA=TRAIN),
-         rankMSE=rank(MSE),rankMAE=rank(MAE)) %>%
-         filter(rankMSE<5,rankMAE<5)
+         rankRMSE=rank(RMSE),rankMAE=rank(MAE)) %>%
+         filter(rankRMSE<5,rankMAE<5)
 
 
-ggplot(data=TRAIN) +
-  geom_point(aes(x=neg_rate_prop,y=price),color="lightskyblue2") + theme_dark() +
-  geom_abline(aes(intercept=2.22,slope=7.56),color="white",size=1.5)
 
-ggplot(data=TEST) +
-  geom_point(aes(x=neg_rate_prop,y=price),color="lightskyblue2") + theme_dark() +
-  geom_abline(aes(intercept=2.22,slope=7.56),color="white",size=1.5)
+ggplot(data=filter(TRAIN,price<50)) +
+  geom_point(aes(x=neg_rate_prop,y=price),color="lightgreen") +
+  geom_abline(aes(intercept=7.12,slope=2.16),color="red",size=1.5)
+
+
+ggplot(data=filter(TEST,price<50)) +
+  geom_point(aes(x=neg_rate_prop,y=price),color="lightgreen") +
+  geom_abline(aes(intercept=7.12,slope=2.16),color="red",size=1.5)
 ```
 
 ##MODEL 1B
 ```{r}
+
 MODEL1B = function(DATA,COEF){
   FIT=COEF[1]+COEF[2]*DATA$release_year
 }
@@ -139,22 +143,29 @@ MAE1B=function(DATA,COEF){
   return(LOSS)
 }
 
-BESTMSE1B=optim(par=c(0,0),fn=MSE1B,DATA=TRAIN)
-BESTMSE1B$par
-BESTMAE1B=optim(par=c(0,0),fn=MAE1B,DATA=TRAIN)
-BESTMAE1B$par
+set.seed(216)
+COEF1B <- tibble(
+  beta0 = runif(10000,0,10),
+  beta1 = runif(10000,0,10)
+)
+
+COEF1B %>% 
+  mutate(RMSE=apply(COEF1A,1,RMSE1B,DATA=TRAIN),
+         MAE=apply(COEF1A,1,MAE1B,DATA=TRAIN),
+         rankRMSE=rank(RMSE),rankMAE=rank(MAE)) %>%
+         filter(rankRMSE<5,rankMAE<5)
 
 #Bo and B1
   
 TRAIN %>%
   filter(price<100) %>%
-  ggplot()+ geom_point(aes(x=release_year,y=price),color="lightskyblue2") +
-    geom_abline(aes(intercept=441,slope=-0.215),color="white",size=1.5)+theme_dark()
+  ggplot()+ geom_point(aes(x=as.character(release_year),y=price),color="lightskyblue2") +
+    geom_abline(aes(intercept=8.11,slope=0.4),color="white",size=1.5)
 
 TEST %>%
   filter(price<100) %>%
-  ggplot()+ geom_point(aes(x=release_year,y=price),color="lightskyblue2") +
-    geom_abline(aes(intercept=441,slope=-0.215),color="white",size=1.5)+theme_dark()
+  ggplot()+ geom_point(aes(x=as.character(release_year),y=price),color="lightskyblue2") +
+    geom_abline(aes(intercept=8.11,slope=0.4),color="white",size=1.5)
 
 ```
 
@@ -165,9 +176,9 @@ LM2=lm(price~neg_rate_prop+release_year,data=TRAIN)
 summary(LM2)
 summary(LM2)$sigma #The RSE value is 8.044, however a small RSE can correspond to a large error if the range of prices is quite variable.
 
-MSE2=function(DATA,COEF){
+RMSE2=function(DATA,COEF){
   ERROR=DATA$price-MODEL2(DATA,COEF)
-  LOSS=mean(ERROR^2)
+  LOSS=sqrt(mean(ERROR^2))
   return(LOSS)
 }
 MAE2=function(DATA,COEF){
@@ -230,13 +241,13 @@ MODEL2.GRAPH = sgf %>%
 ##TABLE COMPARING MAE AND MSE FOR MODEL 0, 1A, 1B AND 2
 ```{r}
 MODELS=c("MODEL 0","MODEL 1A","MODEL 1B","MODEL 2")
-MSE=c(MSE0(TEST,c(4.26)),
-      MSE1A(TEST,c(2.22,7.56)),
-      MSE1B(TEST,c(441,-0.22)),
-      MSE2(TEST,c(371.5,-2.53,-0.18)))
-MAE=c(MAE0(TEST,c(4.26)),
+MSE=c(MSE0(TEST,c(5.05)),
+      RMSE1A(TEST,c(7.12,2.16)),
+      RMSE1B(TEST,c(8.11,0.4)),
+      RMSE2(TEST,c(371.5,-2.53,-0.18)))
+MAE=c(MAE0(TEST,c(5.05)),
       MAE1A(TEST,c(2.22,7.56)),
-      MAE1B(TEST,c(441,-0.22)),
+      MAE1B(TEST,c(8.11,0.14)),
       MAE2(TEST,c(371.5,-2.53,-0.18)))
 COMPARE=tibble(MODELS=MODELS,MSE=MSE,MAE=MAE)
 print(COMPARE)
@@ -293,4 +304,48 @@ ggplot(filter(BEST.MOD,price<50), aes(x = price, y = best.model)) +
 ```
 
 #polynomial approach?
+
+```{r}
+steam_games_sub <- select(steam_games_final, release_year, average_playtime, neg_rate_prop, price) 
+
+set.seed(123)
+  
+poly <- steam_games_sub %>%
+  mutate(split2=sample(x=c("TRAIN","TEST"),size=nrow(steam_games_sub),replace=T,prob=c(0.70,0.30)))
+TRAIN_poly=poly %>%  filter(split2=="TRAIN")
+TEST_poly=poly %>%  filter(split2=="TEST")
+
+poly_model <- lm(price~poly(release_year,2) + poly(average_playtime, 2) + poly(neg_rate_prop, 2), data = TRAIN_poly)
+
+poly_pred <- predict(poly_model, newdata = TEST_poly)
+MAE.func = function(actual, predict){
+  sum = 0 
+  for (i in seq_along(actual)){
+    abs = abs(predict[i] - actual[i])
+    sum = sum + abs
+  }
+  return(sum/length(actual))}
+  
+MAE_poly = MAE.func(TEST_poly$price, poly_pred)
+
+
+
+#making predictions for the next ten years 
+poly_years <- data.frame(
+  release_year = seq(max(steam_games_sub$release_year) + 1, max(steam_games_sub$release_year) + 10, by = 1), 
+  average_playtime = 20, 
+  neg_rate_prop = 0.1)
+
+poly_years$pred_price <- predict(poly_model, newdata= poly_years)
+
+#example average playtime and neg_rate_prop chosen as a specific combination
+ggplot(poly_years %>% filter(average_playtime == 20, neg_rate_prop == 0.1), aes(x = release_year, y = pred_price)) +
+  geom_line() +
+  labs(title = "Predicted Price for Games with Specific Playtime and Negative Rating Proportion",
+       subtitle = "Average playtime = 20 hours, Negative rating proportion = 0.1",
+       x = "Release Year",
+       y = "Predicted Price")
+poly_years %>% filter(average_playtime == 20, neg_rate_prop == 0.1)
+
+```
 

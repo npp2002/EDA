@@ -12,7 +12,7 @@ library(tidyverse)    #Essential Functions
 
 ## PREPPING/VISUALIZING DATASET
 
-How does the release year predict revenue in the top 5 most and top 5 least popular genres?
+Is the relationship between release_year and genre a good predictor of revenue?
 
 ```{r}
 #find frequency of each genre type 
@@ -120,6 +120,7 @@ RMSE=c(RMSE.func(test.steam2$lm1.res),
 COMPARE=tibble(MODELS=MODELS,RMSE=RMSE,MAE=MAE)
 print(COMPARE)
 
+coef(lm7)
 #what I am noticing - it doesn't seem like genre is a good predictor variable. This could also be attributed to the test and train set, which is skewing data. Because a majority of games are released after 2000, the train set could potentially have more recent releases compared to the test. Let's try cross validation on a polynomial model?
 ```
 Interpreting the results for Model 7. Since we took the log of our target variable, revenue, the RMSE and MAE don't represent the actual error in predicting the revenue. In order to find the actual RMSE and MAE from the log of each, you must take the exponent of each value and subtract 1 (log of 0) from each. 
@@ -171,7 +172,7 @@ ggplot(actual_and_predict, aes(x = actual, y = predicted)) +
 
 
 
-##RIDGE REGRESSION USING GENRE AND POS_RATE_PROP and GENRES AS PREDICTORS 
+##RIDGE REGRESSION USING RELEASE_YEAR GENRES AS PREDICTORS 
 
 ```{r}
 library(glmnet)
@@ -204,15 +205,6 @@ legend("topright", legend=colnames(predictor_vars3.MATRIX), col=1:ncol(predictor
 #cross validation
 ```
 
-##MAYBE A K-NN MODEL?
-
-predict the revenue of a game based on a new game which falls within one genre
-
-k=5 most similar games to this "new game"
-
-visualization, k-NN for prediction, transform k-NN
-
-## POLYNOMIAL MODEL?
 
 
 

@@ -27,10 +27,9 @@ steam_games_final = steam_games %>%
   mutate(release_date=str_replace_all(release_date,"-", "")) %>%
   mutate(release_year=substr(release_date,1,4),release_month=substr(release_date,5,6)) %>%
   mutate(pos_rate_prop=positive_ratings/(positive_ratings+negative_ratings))%>%
-  mutate(neg_rate_prop=negative_ratings/(positive_ratings+negative_ratings)) %>%
-  filter()
+  mutate(neg_rate_prop=negative_ratings/(positive_ratings+negative_ratings)) 
 
-steam_games_final$release_year <- as.numeric(as.character(steam_games_final$release_year))
+steam_games_final$release_year <- as.numeric(steam_games_final$release_year)
 
 steam_games_final$release_month <- as.numeric(as.character(steam_games_final$release_month))
 
