@@ -133,9 +133,9 @@ MODEL1B = function(DATA,COEF){
   FIT=COEF[1]+COEF[2]*DATA$release_year
 }
 
-MSE1B=function(DATA,COEF){
+RMSE1B=function(DATA,COEF){
   ERROR=DATA$price-MODEL1B(DATA,COEF)
-  LOSS=mean(ERROR^2)
+  LOSS=sqrt(mean(ERROR^2))
   return(LOSS)
 }
 
@@ -243,7 +243,7 @@ MODEL2.GRAPH = sgf %>%
 ##TABLE COMPARING MAE AND MSE FOR MODEL 0, 1A, 1B AND 2
 ```{r}
 MODELS=c("MODEL 0","MODEL 1A","MODEL 1B","MODEL 2")
-MSE=c(MSE0(TEST,c(5.05)),
+MSE=c(RMSE0(TEST,c(5.05)),
       RMSE1A(TEST,c(7.12,2.16)),
       RMSE1B(TEST,c(8.11,0.4)),
       RMSE2(TEST,c(371.5,-2.53,-0.18)))
@@ -259,7 +259,6 @@ print(COMPARE)
 
 ```{r}
 library(glmnet)
-
 
 response_var <- steam_games_p$price
 predictor_vars <- steam_games_p[,c("neg_rate_prop","release_year","release_month")]

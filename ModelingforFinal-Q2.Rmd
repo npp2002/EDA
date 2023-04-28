@@ -22,6 +22,7 @@ popular <- steam_games_final %>%
    count(genres) %>%
    arrange(desc(n))
 
+steam_games_final
 
 steam_games_genre_grep = filter(steam_games_final,revenue!=0) %>%
   mutate(is.action=grepl("Action",genres)) %>%
@@ -186,8 +187,9 @@ GENRE_TOP = steam_genres_top %>%
   dplyr::select(Top_Genre, revenue, release_year) %>%
   mutate(Top_Genre = factor(Top_Genre))
 
-ctrl <- trainControl(method = "cv", number = 5)
-cmodel1=lm(revenue~release_year,GENRE_TOP)
+
+
+model1=lm(revenue~release_year,GENRE_TOP)
 tidy(model1)
 model2=lm(revenue~release_year+Top_Genre,GENRE_TOP)
 tidy(model2)
@@ -229,13 +231,11 @@ MAE_int = function(residual){
 pred1 <- predict(model1)
 pred2 <- predict(model2)
 pred3 <- predict(model3)
-pred4 <- predict(model4)
 
 # Residuals for each model
 resid1 <- GENRE_TOP$revenue - pred1
 resid2 <- GENRE_TOP$revenue - pred2
 resid3 <- GENRE_TOP$revenue - pred3
-resid4 <- GENRE_TOP$revenue - pred4
 
 
 
@@ -272,51 +272,3 @@ The anova test also proves that there IS a statistical significance between acti
 
 **REAL WORLD INTERPRETATION: WHY?** As stated previously, the relationship between video game genres and revenue over time is complicated. If we ignore the impact of inflation and hyperproduction of games in the past decade or so, we noticed a few things:
 1. indie games tend to stay consist, revenue wise, over time. This is very interesting; indie games are characterized by an analog, or vintage, aesthetic and can sometimes emulate the old days. For example, indie games have lower fps and high pixelation. examples include (INSERT EXAMPLES FROM A FEW DECADES AGO AND FROM A FEW YEARS AGO TOO)
-
-```{r}
-set.seed(216)
-
-
-```
-
-
-
-##RIDGE REGRESSION USING RELEASE_YEAR GENRES AS PREDICTORS 
-
-```{r}
-library(glmnet)
-response_var <- steam_games_genre_grep$revenue
-predictor_vars <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","is.strategy","is.simulation","is.rpg","is.earlyaccess","is.freetoplay","is.sports","release_year")]
-predictor_vars.MATRIX <- as.matrix(predictor_vars)
-ridge_mod <- glmnet(x=predictor_vars.MATRIX,y=response_var,alpha=0)
-plot(ridge_mod,xvar="lambda")
-
-legend("topright", legend=colnames(predictor_vars.MATRIX), col=1:ncol(predictor_vars.MATRIX), lwd=2)
-```
-
-##LASSO REGRESSION
-
-```{r}
-response_var3 <- steam_games_genre_grep$revenue
-predictor_vars3 <- steam_games_genre_grep[,c("is.action","is.indie","is.casual","is.strategy","is.simulation","is.rpg","is.earlyaccess","is.freetoplay","is.sports","release_year")]
-predictor_vars3.MATRIX <- as.matrix(predictor_vars3)
-lasso.mod <- glmnet(x=predictor_vars3.MATRIX,y=response_var3,alpha=1)
-plot(lasso.mod,xvar="lambda",col=1:ncol(predictor_vars3.MATRIX))
-
-legend("topright", legend=colnames(predictor_vars3.MATRIX), col=1:ncol(predictor_vars3.MATRIX), lwd=2)
-
-#WHAT MAKES A LASSO REGRESSION COOL? it can be used to identify the most important variables that are predictive of your outcome variable, and can also help to prevent overfitting by reducing the impact of variables that may be less important.
-
-#you can identify which variables have the highest coefficients (i.e., the most important predictors), and also see how the coefficients change as you increase the strength of the regularization penalty.
-
-#as seen by the graph below, the highest predictors are is.action and is.indie. This makes sense because they are the most popular genres and should indicate 
-
-#cross validation
-```
-
-
-
-
-
-
-
